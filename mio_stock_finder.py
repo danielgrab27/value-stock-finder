@@ -48,8 +48,9 @@ def analizza_azione(ticker):
         return None
 
 # LISTA AZIONI DA ANALIZZARE
-azioni = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'NVDA', 'JNJ', 'JPM', 'XOM', 'V', 'WMT', 
-          'PG', 'KO', 'PEP', 'MCD', 'ABBV', 'AVGO', 'LLY', 'UNH', 'HD', 'MA']
+azioni = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'JNJ', 'JPM', 'XOM',
+    'V', 'WMT', 'PG', 'KO', 'PEP', 'MCD', 'ABBV', 'AVGO', 'LLY', 'UNH',
+    'HD', 'MA', 'BAC', 'CSCO', 'DIS', 'INTC', 'CRM', 'NFLX', 'ADBE', 'PYPL']
 
 print(f"\n🔍 Analizzando {len(azioni)} azioni...")
 print(f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
@@ -78,8 +79,6 @@ print("✅ ANALISI COMPLETATA!")
 print(f"📊 Azioni analizzate: {len(azioni)}")
 print(f"🎯 Opportunità trovate: {len([r for r in risultati if r['sconto'] > 0])}")
 
-# === AGGIUNGI QUESTE RIGHE IN FONDO AL TUO FILE ===
-
 # Salva risultati in CSV
 if risultati:
     # Crea un DataFrame (tabella) con i risultati
@@ -95,13 +94,10 @@ if risultati:
     print(f"💾 Risultati salvati in '{nome_file}'")
     
     # Mostra anteprima
-    print(f"📄 Prime 3 righe salvate:")
-    print(df.head(3))
+    print(f"📄 Prime 30 righe salvate:")
+    print(df.head(30))
 else:
     print("❌ Nessun risultato da salvare")
 
 print("\n" + "=" * 50)
-print("🎯 PER APRIRE IL FILE:")
-print("1. Cerca 'risultati_analisi_YYYYMMDD.csv'")
-print("2. Doppio click → si apre in Excel")
-print("3. Puoi fare grafici, filtri, analisi!")
+
