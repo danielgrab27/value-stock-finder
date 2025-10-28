@@ -159,11 +159,49 @@ def analizza_azione_avanzata(ticker):
 
 # ==================== ESECUZIONE MIGLIORATA ====================
 
-# LISTA AZIONI DA ANALIZZARE (aggiunte alcune value stocks)
-azioni = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'JNJ', 'JPM', 'XOM',
-    'V', 'WMT', 'PG', 'KO', 'PEP', 'MCD', 'ABBV', 'AVGO', 'LLY', 'UNH',
-    'HD', 'MA', 'BAC', 'CSCO', 'DIS', 'INTC', 'CRM', 'NFLX', 'ADBE', 'PYPL',
-    'T', 'VZ', 'BMY', 'PFE', 'MRK']  # Aggiunte telecom e pharma
+# LISTA AZIONI DA ANALIZZARE (100+ tickers)
+azioni = [
+    # 🔷 TECNOLOGIA (25)
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AVGO', 'ADBE', 'CRM',
+    'CSCO', 'INTC', 'ORCL', 'IBM', 'QCOM', 'TXN', 'AMD', 'NOW', 'UBER', 'SHOP',
+    'NET', 'SNOW', 'PANW', 'CRWD', 'MSI',
+    
+    # 🏦 FINANZIARIE (20)
+    'JPM', 'BAC', 'WFC', 'GS', 'MS', 'SCHW', 'BLK', 'C', 'AXP', 'V',
+    'MA', 'PYPL', 'SQ', 'COF', 'DFS', 'RY', 'TD', 'BX', 'KKR', 'SPGI',
+    
+    # 🏥 HEALTHCARE (20)
+    'JNJ', 'UNH', 'LLY', 'PFE', 'ABBV', 'TMO', 'MRK', 'DHR', 'AMGN', 'GILD',
+    'BMY', 'VRTX', 'REGN', 'ISRG', 'SYK', 'BDX', 'ZTS', 'CI', 'HUM', 'EW',
+    
+    # 🏠 CONSUMO CICLICO (15)
+    'HD', 'MCD', 'SBUX', 'NKE', 'LOW', 'TSCO', 'F', 'GM', 'MAR', 'HLT',
+    'BKNG', 'NCLH', 'RCL', 'CCL', 'DHI',
+    
+    # 🛒 CONSUMO DIFENSIVO (15)
+    'WMT', 'PG', 'KO', 'PEP', 'COST', 'PM', 'MO', 'MDLZ', 'CL', 'EL',
+    'KMB', 'SYY', 'KR', 'TGT', 'DG',
+    
+    # ⚡ ENERGY & UTILITIES (15)
+    'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'PSX', 'VLO', 'MPC', 'OXY', 'KMI',
+    'NEE', 'DUK', 'SO', 'D', 'AEP',
+    
+    # 🏭 INDUSTRIALI (15)
+    'RTX', 'BA', 'LMT', 'GD', 'NOC', 'CAT', 'DE', 'HON', 'GE', 'UPS',
+    'FDX', 'EMR', 'ITW', 'WM', 'RSG',
+    
+    # 🏢 MATERIALI & REAL ESTATE (15)
+    'LIN', 'APD', 'FCX', 'NEM', 'GOLD', 'VALE', 'BHP', 'RIO', 'PLD', 'AMT',
+    'CCI', 'EQIX', 'PSA', 'O', 'SPG',
+    
+    # 📱 TELECOM & MEDIA (15)
+    'T', 'VZ', 'CMCSA', 'DIS', 'NFLX', 'CHTR', 'TMUS', 'EA', 'ATVI', 'TTWO',
+    'LYV', 'LVS', 'WYNN', 'MGM', 'ROKU',
+    
+    # 🌍 INTERNAZIONALI (15)
+    'ASML', 'NSRGY', 'SAP', 'UL', 'BUD', 'AZN', 'GSK', 'SNY', 'SAN', 'BBVA',
+    'ING', 'HSBC', 'TM', 'HMC', 'SONY'
+]
 
 print(f"\n🔍 Analizzando {len(azioni)} azioni...")
 print(f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
