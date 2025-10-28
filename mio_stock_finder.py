@@ -62,7 +62,7 @@ for azione in azioni:
     if risultato:
         risultati.append(risultato)
 
-# MOSTRA MIGLIORI OPPORTUNITÀ
+# MIGLIORI OPPORTUNITÀ
 if risultati:
     print(f"\n🏆 MIGLIORI OPPORTUNITÀ (ordinate per sconto):")
     print("-" * 45)
