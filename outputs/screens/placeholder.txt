@@ -1,0 +1,2 @@
+Cartella per i risultati degli screening giornalieri
+I file CSV e JSON degli screening verranno salvati qui
