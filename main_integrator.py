@@ -60,9 +60,29 @@ def esegui_screening():
         print(f"❌ Errore durante lo screening: {e}")
 
 def esegui_backtesting():
-    """Esegue backtesting"""
-    print("\n📊 BACKTESTING MODULE")
-    print("⚠️  Da implementare - vedi sviluppo.md per piano")
+    """Esegue backtesting sulle migliori opportunità"""
+    try:
+        # Importa il modulo backtester
+        sys.path.append('src')
+        from backtester import backtest_opportunita, test_backtest_sistema
+        
+        print("\n📊 MODALITÀ BACKTESTING")
+        print("1. Test sistema backtesting")
+        print("2. Backtesting su opportunità reali")
+        
+        scelta = input("\nScelta (1-2): ").strip()
+        
+        if scelta == "1":
+            test_backtest_sistema()
+        elif scelta == "2":
+            print("🔍 Caricamento ultimo screening...")
+            # Qui poi caricherà i risultati degli screening
+            print("⚠️  Funzionalità in sviluppo - usa prima Test Sistema")
+        else:
+            print("❌ Scelta non valida")
+            
+    except Exception as e:
+        print(f"❌ Errore backtesting: {e}")
 
 def test_struttura():
     """Testa la struttura del repository"""
