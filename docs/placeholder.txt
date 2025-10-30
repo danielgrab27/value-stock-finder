@@ -1,0 +1,13 @@
+DOCS - Documentazione del Progetto
+
+📋 DOCUMENTAZIONE IN SVILUPPO:
+• piano_sviluppo.md - Roadmap e timeline
+• user_guide.md - Guida all'uso del software
+• technical_specs.md - Specifiche tecniche
+• api_reference.md - Documentazione API future
+
+🎯 PROSSIMI DOCUMENTI:
+- Value Investing Methodology
+- Sistema di Scoring spiegato
+- Esempi di utilizzo
+- Troubleshooting guide
