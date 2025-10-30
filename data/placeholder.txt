@@ -1,0 +1,7 @@
+DATA - Configurazioni e Dati
+
+Questa cartella conterrà:
+✅ config.json - Parametri e soglie del programma
+✅ stock_lists/ - Liste di ticker organizzate per settore  
+✅ historical/ - Dati storici per backtesting
+✅ benchmarks/ - Dati degli indici di riferimento
