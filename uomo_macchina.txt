@@ -1,0 +1,1 @@
+Continua lo sviluppo di value-stock-finder. Vedi https://github.com/danielgrab27/value-stock-finder e sviluppo.md per lo stato attuale
