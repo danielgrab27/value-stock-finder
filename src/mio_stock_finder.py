@@ -22,6 +22,28 @@ CONFIG = {
     'PAUSE_SECONDS': 2             # 🔥 Secondi di pausa
 }
 
+def analizza_azioni_avanzata():
+    """Versione che restituisce i risultati per l'integrazione"""
+    print(f"\n🔍 Analizzando {len(azioni)} azioni...")
+    print(f"⚙️  Configurazione: Sconto min {CONFIG['MIN_DISCOUNT']}% | Qualità min {CONFIG['MIN_QUALITY_SCORE']}/5")
+    print(f"⏰ Pause: ogni {CONFIG['PAUSE_EVERY']} azioni per {CONFIG['PAUSE_SECONDS']} secondi")
+    print(f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print("-" * 50)
+
+    risultati = []
+    for i, azione in enumerate(azioni):
+        risultato = analizza_azione_avanzata(azione)
+        if risultato:
+            risultati.append(risultato)
+        
+        # 🔥 PAUSA PER EVITARE RATE LIMITING
+        if (i + 1) % CONFIG['PAUSE_EVERY'] == 0 and (i + 1) < len(azioni):
+            print(f"\n⏳ Pausa di {CONFIG['PAUSE_SECONDS']} secondi... ({i+1}/{len(azioni)} azioni completate)")
+            time.sleep(CONFIG['PAUSE_SECONDS'])
+    
+    # 🔥 IMPORTANTE: RESTITUISCE I RISULTATI per l'integrazione
+    return risultati
+
 # ==================== GESTIONE ERRORI AVANZATA ====================
 
 def safe_get(info, key, default=None):
@@ -324,91 +346,80 @@ azioni = [
     'ING', 'HSBC', 'TM', 'HMC', 'SONY'
 ]
 
-print(f"\n🔍 Analizzando {len(azioni)} azioni...")
-print(f"⚙️  Configurazione: Sconto min {CONFIG['MIN_DISCOUNT']}% | Qualità min {CONFIG['MIN_QUALITY_SCORE']}/5")
-print(f"⏰ Pause: ogni {CONFIG['PAUSE_EVERY']} azioni per {CONFIG['PAUSE_SECONDS']} secondi")
-print(f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-print("-" * 50)
+# ==================== CODICE ESECUZIONE DIRECTTA ====================
 
-risultati = []
-for i, azione in enumerate(azioni):
-    risultato = analizza_azione_avanzata(azione)
-    if risultato:
-        risultati.append(risultato)
+if __name__ == "__main__":
+    # Quando eseguito direttamente, mostra output completo
+    risultati = analizza_azioni_avanzata()
     
-    # 🔥 PAUSA PER EVITARE RATE LIMITING
-    if (i + 1) % CONFIG['PAUSE_EVERY'] == 0 and (i + 1) < len(azioni):
-        print(f"\n⏳ Pausa di {CONFIG['PAUSE_SECONDS']} secondi... ({i+1}/{len(azioni)} azioni completate)")
-        time.sleep(CONFIG['PAUSE_SECONDS'])
-
-# 🔥 NUOVO: MIGLIORI OPPORTUNITÀ CON PUNTEGGIO
-if risultati:
-    print(f"\n🏆 MIGLIORI OPPORTUNITÀ (ordinate per punteggio):")
-    print("-" * 50)
-    
-    # Filtra solo quelle con sconto E qualità OK
-    opportunita_reali = [r for r in risultati if r['sconto'] > CONFIG['MIN_DISCOUNT'] and r['qualita_ok']]
-    
-    if opportunita_reali:
-        # 🔥 ORDINA PER PUNTEGGIO invece che solo per sconto
-        risultati_ordinati = sorted(opportunita_reali, key=lambda x: x['investment_score'], reverse=True)
+    # 🔥 NUOVO: MIGLIORI OPPORTUNITÀ CON PUNTEGGIO
+    if risultati:
+        print(f"\n🏆 MIGLIORI OPPORTUNITÀ (ordinate per punteggio):")
+        print("-" * 50)
         
-        for i, risultato in enumerate(risultati_ordinati[:15], 1):  # Top 15 invece di 10
-            emoji_rischio = "🟢" if risultato['rischio'] == "Basso" else "🟡" if risultato['rischio'] == "Medio" else "🔴"
-            stelle = get_stelle_rating(risultato['investment_score'])
+        # Filtra solo quelle con sconto E qualità OK
+        opportunita_reali = [r for r in risultati if r['sconto'] > CONFIG['MIN_DISCOUNT'] and r['qualita_ok']]
+        
+        if opportunita_reali:
+            # 🔥 ORDINA PER PUNTEGGIO invece che solo per sconto
+            risultati_ordinati = sorted(opportunita_reali, key=lambda x: x['investment_score'], reverse=True)
             
-            print(f"{i}. {risultato['ticker']}: {risultato['sconto']:.1f}% sconto")
-            print(f"   💰 Prezzo: ${risultato['prezzo']:.2f} | Valore: ${risultato['valore_intrinseco']:.2f}")
-            print(f"   📊 Punteggio: {risultato['investment_score']:.0f}/100 {stelle}")
-            print(f"   ⚖️  Rischio: {risultato['rischio']} {emoji_rischio} | Qualità: {risultato['quality_score_detailed']}/10")
-    else:
-        print("🤔 Nessuna opportunità di qualità trovata oggi")
-
-# VALUE TRAPS (sconti ma bassa qualità)
-value_traps = [r for r in risultati if r['sconto'] > 0 and not r['qualita_ok']]
-if value_traps:
-    print(f"\n🚨 VALUE TRAPS (Sconti ma bassa qualità):")
-    print("-" * 40)
-    for trap in value_traps[:8]:  # Mostra più value traps
-        print(f"⚠️  {trap['ticker']}: {trap['sconto']:.1f}% sconto | Qualità: {trap['quality_score_detailed']}/10")
-
-print("\n" + "=" * 50)
-print("✅ ANALISI COMPLETATA!")
-print(f"📊 Azioni analizzate: {len(azioni)}")
-print(f"🎯 Opportunità di qualità: {len(opportunita_reali)}")
-print(f"🚨 Value traps identificati: {len(value_traps)}")
-
-# 🔥 NUOVO: SALVATAGGIO MIGLIORATO CON PUNTEGGI
-if risultati:
-    df = pd.DataFrame(risultati)
-    
-    # Aggiungi raccomandazione basata su punteggio
-    def raccomandazione(row):
-        if row['investment_score'] >= 80:
-            return "FORTE ACQUISTO 🚀"
-        elif row['investment_score'] >= 60:
-            return "ACQUISTA ✅"
-        elif row['sconto'] > 0 and not row['qualita_ok']:
-            return "INVESTIGA 🔍"
+            for i, risultato in enumerate(risultati_ordinati[:15], 1):  # Top 15 invece di 10
+                emoji_rischio = "🟢" if risultato['rischio'] == "Basso" else "🟡" if risultato['rischio'] == "Medio" else "🔴"
+                stelle = get_stelle_rating(risultato['investment_score'])
+                
+                print(f"{i}. {risultato['ticker']}: {risultato['sconto']:.1f}% sconto")
+                print(f"   💰 Prezzo: ${risultato['prezzo']:.2f} | Valore: ${risultato['valore_intrinseco']:.2f}")
+                print(f"   📊 Punteggio: {risultato['investment_score']:.0f}/100 {stelle}")
+                print(f"   ⚖️  Rischio: {risultato['rischio']} {emoji_rischio} | Qualità: {risultato['quality_score_detailed']}/10")
         else:
-            return "EVITA ❌"
-    
-    df['raccomandazione'] = df.apply(raccomandazione, axis=1)
-    
-    # Ordina per punteggio prima di salvare
-    df = df.sort_values('investment_score', ascending=False)
-    
-    # Salva
-    data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
-    nome_file = f"analisi_avanzata_{data_oggi}.csv"
-    df.to_csv(nome_file, index=False)
-    
-    print(f"\n💾 Risultati salvati in '{nome_file}'")
-    
-    # 🔥 OUTPUT PIÙ PULITO senza "Name: count, dtype: int64"
-    print(f"📊 Riepilogo raccomandazioni:")
-    conteggi = df['raccomandazione'].value_counts()
-    for raccomandazione, count in conteggi.items():
-        print(f"   {raccomandazione}: {count} azioni")
+            print("🤔 Nessuna opportunità di qualità trovata oggi")
 
-print("\n" + "=" * 50)
+    # VALUE TRAPS (sconti ma bassa qualità)
+    value_traps = [r for r in risultati if r['sconto'] > 0 and not r['qualita_ok']]
+    if value_traps:
+        print(f"\n🚨 VALUE TRAPS (Sconti ma bassa qualità):")
+        print("-" * 40)
+        for trap in value_traps[:8]:  # Mostra più value traps
+            print(f"⚠️  {trap['ticker']}: {trap['sconto']:.1f}% sconto | Qualità: {trap['quality_score_detailed']}/10")
+
+    print("\n" + "=" * 50)
+    print("✅ ANALISI COMPLETATA!")
+    print(f"📊 Azioni analizzate: {len(azioni)}")
+    print(f"🎯 Opportunità di qualità: {len(opportunita_reali)}")
+    print(f"🚨 Value traps identificati: {len(value_traps)}")
+
+    # 🔥 NUOVO: SALVATAGGIO MIGLIORATO CON PUNTEGGI
+    if risultati:
+        df = pd.DataFrame(risultati)
+        
+        # Aggiungi raccomandazione basata su punteggio
+        def raccomandazione(row):
+            if row['investment_score'] >= 80:
+                return "FORTE ACQUISTO 🚀"
+            elif row['investment_score'] >= 60:
+                return "ACQUISTA ✅"
+            elif row['sconto'] > 0 and not row['qualita_ok']:
+                return "INVESTIGA 🔍"
+            else:
+                return "EVITA ❌"
+        
+        df['raccomandazione'] = df.apply(raccomandazione, axis=1)
+        
+        # Ordina per punteggio prima di salvare
+        df = df.sort_values('investment_score', ascending=False)
+        
+        # Salva
+        data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
+        nome_file = f"analisi_avanzata_{data_oggi}.csv"
+        df.to_csv(nome_file, index=False)
+        
+        print(f"\n💾 Risultati salvati in '{nome_file}'")
+        
+        # 🔥 OUTPUT PIÙ PULITO senza "Name: count, dtype: int64"
+        print(f"📊 Riepilogo raccomandazioni:")
+        conteggi = df['raccomandazione'].value_counts()
+        for raccomandazione, count in conteggi.items():
+            print(f"   {raccomandazione}: {count} azioni")
+
+    print("\n" + "=" * 50)

@@ -60,30 +60,71 @@ def esegui_screening():
         print(f"❌ Errore durante lo screening: {e}")
 
 def esegui_backtesting():
-    """Esegue backtesting sulle migliori opportunità"""
+    """Esegue backtesting sulle migliori opportunità - VERSIONE INTEGRATA"""
     try:
-        # Importa il modulo backtester
+        # Importa i moduli
         sys.path.append('src')
-        from backtester import backtest_opportunita, test_backtest_sistema
+        from backtester import backtest_opportunita, test_backtest_sistema, salva_risultati_backtest
+        from mio_stock_finder import analizza_azioni_avanzata
         
-        print("\n📊 MODALITÀ BACKTESTING")
+        print("\n📊 MODALITÀ BACKTESTING INTEGRATA")
         print("1. Test sistema backtesting")
-        print("2. Backtesting su opportunità reali")
+        print("2. Backtesting su screening reale (OGGI)")
+        print("3. Backtesting su file screening precedente")
         
-        scelta = input("\nScelta (1-2): ").strip()
+        scelta = input("\nScelta (1-3): ").strip()
         
         if scelta == "1":
             test_backtest_sistema()
+            
         elif scelta == "2":
-            print("🔍 Caricamento ultimo screening...")
-            # Qui poi caricherà i risultati degli screening
-            print("⚠️  Funzionalità in sviluppo - usa prima Test Sistema")
+            print("🔍 Esecuzione screening in tempo reale...")
+            
+            # Esegui lo screening per ottenere opportunità REALI
+            risultati_screening = analizza_azioni_avanzata()
+            
+            if not risultati_screening:
+                print("❌ Nessun risultato dallo screening")
+                return
+            
+            # Filtra solo le opportunità di qualità (come fa mio_stock_finder.py)
+            min_discount = 5.0  # Stesso valore di CONFIG
+            opportunita_reali = [
+                r for r in risultati_screening 
+                if r['sconto'] > min_discount and r['qualita_ok']
+            ]
+            
+            if not opportunita_reali:
+                print("❌ Nessuna opportunità di qualità trovata oggi")
+                return
+                
+            print(f"🎯 Trovate {len(opportunita_reali)} opportunità di qualità")
+            
+            # Esegui backtesting sulle opportunità reali
+            risultati_backtest = backtest_opportunita(opportunita_reali, anni=3)
+            
+            if risultati_backtest:
+                salva_risultati_backtest(risultati_backtest)
+                print("\n📈 ANALISI COMPARATIVA:")
+                for risultato in risultati_backtest[:5]:  # Top 5
+                    rendimento = risultato['rendimento_totale_perc']
+                    sconto = risultato['sconto']
+                    score = risultato['investment_score']
+                    print(f"   {risultato['ticker']}: Sconto {sconto:.1f}% → Rendimento {rendimento:.1f}% | Score: {score:.0f}")
+            
+        elif scelta == "3":
+            print("📁 Caricamento screening precedente...")
+            # Qui puoi aggiungere il caricamento da file JSON salvato
+            print("⚠️  Funzionalità in sviluppo - usa opzione 2 per ora")
+            
         else:
             print("❌ Scelta non valida")
             
     except Exception as e:
         print(f"❌ Errore backtesting: {e}")
-
+        import traceback
+        traceback.print_exc()
+        
 def test_struttura():
     """Testa la struttura del repository"""
     print("\n🧪 TEST STRUTTURA REPOSITORY")
