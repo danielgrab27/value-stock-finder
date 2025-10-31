@@ -10,7 +10,7 @@ import json
 
 def analizza_performance_storica(ticker, anni=3):
     """
-    Analizza la performance storica di un'azione
+    Analizza la performance storica di un'azione - VERSIONE ULTRA-SICURA
     """
     try:
         print(f"📈 Analisi storica {ticker} ({anni} anni)...")
@@ -19,25 +19,71 @@ def analizza_performance_storica(ticker, anni=3):
         end_date = datetime.now()
         start_date = end_date - timedelta(days=anni*365)
         
-        # Download dati storici
-        stock_data = yf.download(ticker, start=start_date, end=end_date, progress=False)
+        # 🔥 VERSIONE SICURA: usa download semplice
+        try:
+            stock_data = yf.download(
+                ticker, 
+                start=start_date, 
+                end=end_date, 
+                progress=False,
+                auto_adjust=True
+            )
+        except Exception as e:
+            print(f"   ❌ Download fallito per {ticker}: {e}")
+            return None
         
-        if stock_data.empty or len(stock_data) < 30:
+        # 🔥 CONTROLLO MOLTO ESPLICITO
+        if stock_data is None:
+            return None
+            
+        if hasattr(stock_data, 'empty') and stock_data.empty:
+            return None
+            
+        # 🔥 CONVERTI in DataFrame semplice se necessario
+        if isinstance(stock_data, pd.DataFrame):
+            # Se è un DataFrame multi-colonna, prendi solo Close
+            if 'Close' in stock_data.columns:
+                close_series = stock_data['Close']
+            else:
+                # Se non ha colonna Close, usa la prima colonna
+                close_series = stock_data.iloc[:, 0]
+        else:
+            # Se non è un DataFrame, non possiamo procedere
+            return None
+        
+        # 🔥 VERIFICA DATI
+        if len(close_series) < 30:
+            return None
+            
+        # Rimuovi valori NaN
+        close_series = close_series.dropna()
+        if len(close_series) < 30:
             return None
         
         # Calcola metriche performance
-        prezzo_iniziale = stock_data['Close'].iloc[0]
-        prezzo_attuale = stock_data['Close'].iloc[-1]
+        prezzo_iniziale = close_series.iloc[0]
+        prezzo_attuale = close_series.iloc[-1]
+        
+        # 🔥 CONVERTI ESPLICITAMENTE a float
+        try:
+            prezzo_iniziale = float(prezzo_iniziale)
+            prezzo_attuale = float(prezzo_attuale)
+        except:
+            return None
+        
         rendimento_totale = ((prezzo_attuale - prezzo_iniziale) / prezzo_iniziale) * 100
         
-        # Volatilità (deviazione standard rendimenti giornalieri)
-        rendimenti_giornalieri = stock_data['Close'].pct_change().dropna()
-        volatilita = rendimenti_giornalieri.std() * 100
+        # Volatilità
+        rendimenti_giornalieri = close_series.pct_change().dropna()
+        if len(rendimenti_giornalieri) < 10:
+            return None
+            
+        volatilita = float(rendimenti_giornalieri.std() * 100)
         
         # Massimo drawdown
-        rolling_max = stock_data['Close'].expanding().max()
-        drawdown = (stock_data['Close'] - rolling_max) / rolling_max * 100
-        max_drawdown = drawdown.min()
+        rolling_max = close_series.expanding().max()
+        drawdown = (close_series - rolling_max) / rolling_max * 100
+        max_drawdown = float(drawdown.min())
         
         return {
             'ticker': ticker,
@@ -53,7 +99,7 @@ def analizza_performance_storica(ticker, anni=3):
         }
         
     except Exception as e:
-        print(f"❌ Errore analisi storica {ticker}: {e}")
+        print(f"❌ Errore analisi storica {ticker}: {str(e)[:100]}...")
         return None
 
 def backtest_opportunita(opportunita, anni=3):
