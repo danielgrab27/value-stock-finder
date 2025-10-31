@@ -105,12 +105,17 @@ def esegui_backtesting():
             
             if risultati_backtest:
                 salva_risultati_backtest(risultati_backtest)
-                print("\n📈 ANALISI COMPARATIVA:")
-                for risultato in risultati_backtest[:5]:  # Top 5
-                    rendimento = risultato['rendimento_totale_perc']
-                    sconto = risultato['sconto']
-                    score = risultato['investment_score']
-                    print(f"   {risultato['ticker']}: Sconto {sconto:.1f}% → Rendimento {rendimento:.1f}% | Score: {score:.0f}")
+                print("\n📈 ANALISI COMPARATIVA vs S&P500:")
+                for risultato in risultati_backtest[:6]:  # Top 6 (incluso S&P500)
+                    if risultato['ticker'] == 'S&P500':
+                        print(f"   📊 {risultato['ticker']}: {risultato['rendimento_totale_perc']:>6.1f}% (Benchmark)")
+                    else:
+                        rendimento = risultato['rendimento_totale_perc']
+                        sconto = risultato['sconto']
+                        alpha = risultato.get('alpha_perc', 0)  # Usa .get() per sicurezza
+                        performance = "🚀" if risultato.get('battuto_sp500', False) else "📉"
+                        
+                        print(f"   {performance} {risultato['ticker']}: Sconto {sconto:>5.1f}% | Rend: {rendimento:>5.1f}% | Alpha: {alpha:>5.1f}% | Score: {risultato['investment_score']:.0f}")
             
         elif scelta == "3":
             print("📁 Caricamento screening precedente...")

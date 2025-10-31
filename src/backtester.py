@@ -127,6 +127,8 @@ def backtest_opportunita(opportunita, anni=3):
             rendimento = risultato_backtest['rendimento_totale_perc']
             drawdown = risultato_backtest['max_drawdown_perc']
             print(f"✅ {ticker}: {rendimento:>6.1f}% | Max Drawdown: {drawdown:>5.1f}%")
+
+    risultati = aggiungi_confronto_sp500(risultati, anni)
     
     return risultati
 
@@ -162,6 +164,83 @@ def test_backtest_sistema():
         salva_risultati_backtest(risultati)
     
     return risultati
+
+def analizza_performance_sp500(anni=3):
+    """
+    Analizza la performance dell'S&P500 nello stesso periodo
+    """
+    try:
+        print(f"📊 Analisi performance S&P500 ({anni} anni)...")
+        
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=anni*365)
+        
+        # Download dati S&P500
+        sp500_data = yf.download('^GSPC', start=start_date, end=end_date, progress=False, auto_adjust=True)
+        
+        if sp500_data.empty or len(sp500_data) < 30:
+            print("❌ Dati S&P500 insufficienti")
+            return None
+        
+        close_prices = sp500_data['Close']
+        prezzo_iniziale = float(close_prices.iloc[0])
+        prezzo_attuale = float(close_prices.iloc[-1])
+        rendimento_totale = ((prezzo_attuale - prezzo_iniziale) / prezzo_iniziale) * 100
+        
+        # Calcola volatilità e drawdown
+        rendimenti_giornalieri = close_prices.pct_change().dropna()
+        volatilita = float(rendimenti_giornalieri.std() * 100)
+        
+        rolling_max = close_prices.expanding().max()
+        drawdown = (close_prices - rolling_max) / rolling_max * 100
+        max_drawdown = float(drawdown.min())
+        
+        performance_sp500 = {
+            'ticker': 'S&P500',
+            'periodo_analisi_anni': anni,
+            'prezzo_iniziale': round(prezzo_iniziale, 2),
+            'prezzo_attuale': round(prezzo_attuale, 2),
+            'rendimento_totale_perc': round(rendimento_totale, 2),
+            'volatilita_annualizzata': round(volatilita, 2),
+            'max_drawdown_perc': round(max_drawdown, 2),
+            'sharpe_ratio': round(rendimento_totale / volatilita, 2) if volatilita > 0 else 0,
+            'data_inizio': start_date.strftime('%Y-%m-%d'),
+            'data_fine': end_date.strftime('%Y-%m-%d')
+        }
+        
+        print(f"✅ S&P500: {rendimento_totale:.1f}% rendimento")
+        return performance_sp500
+        
+    except Exception as e:
+        print(f"❌ Errore analisi S&P500: {e}")
+        return None
+
+def aggiungi_confronto_sp500(risultati_backtest, anni=3):
+    """
+    Aggiunge confronto con S&P500 a tutti i risultati
+    """
+    performance_sp500 = analizza_performance_sp500(anni)
+    
+    if not performance_sp500:
+        return risultati_backtest
+    
+    rendimento_sp500 = performance_sp500['rendimento_totale_perc']
+    
+    for risultato in risultati_backtest:
+        # Calcola alpha (performance relativa)
+        rendimento_azione = risultato['rendimento_totale_perc']
+        alpha = rendimento_azione - rendimento_sp500
+        
+        # Aggiungi metriche di confronto
+        risultato['rendimento_sp500_perc'] = rendimento_sp500
+        risultato['alpha_perc'] = round(alpha, 2)
+        risultato['battuto_sp500'] = alpha > 0
+        risultato['performance_relativa'] = "SOPRA" if alpha > 0 else "SOTTO"
+    
+    # Aggiungi i dati S&P500 come primo elemento
+    risultati_backtest.insert(0, performance_sp500)
+    
+    return risultati_backtest
 
 if __name__ == "__main__":
     test_backtest_sistema()
