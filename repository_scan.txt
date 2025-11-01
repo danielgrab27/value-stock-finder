@@ -1,0 +1,2396 @@
+=== SCANSIONE COMPLETA REPOSITORY ===
+Data: 2025-11-01 18:57:59
+Progetto: Value Stock Finder
+==================================================
+
+=== STRUTTURA CARTELLE ===
+./
+  .gitattributes
+  .gitignore
+  main_integrator.py
+  README.md
+  sviluppo.md
+  uomo_macchina.txt
+  data/
+    placeholder.txt
+  docs/
+    placeholder.txt
+  outputs/
+    archive/
+      analisi_avanzata_20251028.csv
+      analisi_avanzata_20251029_0918.csv
+      analisi_avanzata_20251029_0934.csv
+      placeholder.txt
+      risultati_analisi_20251027.csv
+      risultati_analisi_20251028.csv
+    backtests/
+      backtest_20251031_0158.json
+      backtest_20251031_0244.json
+      backtest_20251031_0305.json
+      backtest_20251031_0311.json
+      backtest_20251101_1855.json
+      placeholder.txt
+    reports/
+      placeholder.txt
+    screens/
+      placeholder.txt
+  src/
+    backtester.py
+    mio_stock_finder.py
+
+=== CONTENUTO FILE ===
+
+=== FILE: .gitattributes ===
+# Auto detect text files and perform LF normalization
+* text=auto
+=== FINE: .gitattributes ===
+
+=== FILE: .gitignore ===
+# File di dati grandi - escludi ma mantieni alcune cartelle
+*.csv
+!outputs/screens/*.csv
+!outputs/backtests/*.csv
+!outputs/reports/*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Sistema
+.DS_Store
+Thumbs.db
+=== FINE: .gitignore ===
+
+=== FILE: main_integrator.py ===
+"""
+🎯 VALUE STOCK FINDER - Main Integrator
+Versione: 1.0
+Data: 2024-01-15
+"""
+
+import os
+import sys
+import json
+from datetime import datetime
+
+def main():
+    print("🎯 VALUE STOCK FINDER - MAIN INTEGRATOR")
+    print("=" * 50)
+    print(f"📅 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    
+    # Verifica struttura
+    if not os.path.exists('src/mio_stock_finder.py'):
+        print("❌ File principale non trovato in src/")
+        print("💡 Esegui prima la riorganizzazione del repository")
+        return
+    
+    print("✅ Struttura repository verificata")
+    print("\nScegli operazione:")
+    print("1. 🔍 Esegui Screening Completo")
+    print("2. 📊 Solo Backtesting") 
+    print("3. 🏗️  Test Struttura")
+    
+    scelta = input("\nScelta (1-3): ").strip()
+    
+    if scelta == "1":
+        esegui_screening()
+    elif scelta == "2":
+        esegui_backtesting()
+    elif scelta == "3":
+        test_struttura()
+    else:
+        print("❌ Scelta non valida")
+
+def esegui_screening():
+    """Esegue lo screening completo"""
+    try:
+        # Aggiungi src al path per importare
+        sys.path.append('src')
+        from mio_stock_finder import analizza_azioni_avanzata
+        
+        print("\n🚀 AVVIO SCREENING COMPLETO...")
+        risultati = analizza_azioni_avanzata()
+        
+        # Salva in outputs/screens/
+        data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
+        filename = f"outputs/screens/screening_{data_oggi}.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(risultati, f, indent=2)
+        
+        print(f"💾 Risultati salvati in: {filename}")
+        
+    except Exception as e:
+        print(f"❌ Errore durante lo screening: {e}")
+
+def esegui_backtesting():
+    """Esegue backtesting sulle migliori opportunità - VERSIONE INTEGRATA"""
+    try:
+        # Importa i moduli
+        sys.path.append('src')
+        from backtester import backtest_opportunita, test_backtest_sistema, salva_risultati_backtest
+        from mio_stock_finder import analizza_azioni_avanzata
+        
+        print("\n📊 MODALITÀ BACKTESTING INTEGRATA")
+        print("1. Test sistema backtesting")
+        print("2. Backtesting su screening reale (OGGI)")
+        print("3. Backtesting su file screening precedente")
+        
+        scelta = input("\nScelta (1-3): ").strip()
+        
+        if scelta == "1":
+            test_backtest_sistema()
+            
+        elif scelta == "2":
+            print("🔍 Esecuzione screening in tempo reale...")
+            
+            # Esegui lo screening per ottenere opportunità REALI
+            risultati_screening = analizza_azioni_avanzata()
+            
+            if not risultati_screening:
+                print("❌ Nessun risultato dallo screening")
+                return
+            
+            # Filtra solo le opportunità di qualità (come fa mio_stock_finder.py)
+            min_discount = 5.0  # Stesso valore di CONFIG
+            opportunita_reali = [
+                r for r in risultati_screening 
+                if r['sconto'] > min_discount and r['qualita_ok']
+            ]
+            
+            if not opportunita_reali:
+                print("❌ Nessuna opportunità di qualità trovata oggi")
+                return
+                
+            print(f"🎯 Trovate {len(opportunita_reali)} opportunità di qualità")
+            
+            # Esegui backtesting sulle opportunità reali
+            risultati_backtest = backtest_opportunita(opportunita_reali, anni=3)
+            
+            if risultati_backtest:
+                salva_risultati_backtest(risultati_backtest)
+                print("\n📈 ANALISI COMPARATIVA vs S&P500:")
+                for risultato in risultati_backtest[:6]:  # Top 6 (incluso S&P500)
+                    if risultato['ticker'] == 'S&P500':
+                        print(f"   📊 {risultato['ticker']}: {risultato['rendimento_totale_perc']:>6.1f}% (Benchmark)")
+                    else:
+                        rendimento = risultato['rendimento_totale_perc']
+                        sconto = risultato['sconto']
+                        alpha = risultato.get('alpha_perc', 0)  # Usa .get() per sicurezza
+                        performance = "🚀" if risultato.get('battuto_sp500', False) else "📉"
+                        
+                        print(f"   {performance} {risultato['ticker']}: Sconto {sconto:>5.1f}% | Rend: {rendimento:>5.1f}% | Alpha: {alpha:>5.1f}% | Score: {risultato['investment_score']:.0f}")
+            
+        elif scelta == "3":
+            print("📁 Caricamento screening precedente...")
+            # Qui puoi aggiungere il caricamento da file JSON salvato
+            print("⚠️  Funzionalità in sviluppo - usa opzione 2 per ora")
+            
+        else:
+            print("❌ Scelta non valida")
+            
+    except Exception as e:
+        print(f"❌ Errore backtesting: {e}")
+        import traceback
+        traceback.print_exc()
+        
+def test_struttura():
+    """Testa la struttura del repository"""
+    print("\n🧪 TEST STRUTTURA REPOSITORY")
+    
+    cartelle_necessarie = ['src', 'outputs', 'data', 'docs', 'outputs/screens', 'outputs/backtests', 'outputs/reports', 'outputs/archive']
+    
+    for cartella in cartelle_necessarie:
+        if os.path.exists(cartella):
+            print(f"✅ {cartella}/")
+        else:
+            print(f"❌ {cartella}/ (mancante)")
+    
+    print("\n📁 File principali:")
+    file_necessari = ['src/mio_stock_finder.py', 'main_integrator.py']
+    
+    for file in file_necessari:
+        if os.path.exists(file):
+            print(f"✅ {file}")
+        else:
+            print(f"❌ {file} (mancante)")
+
+if __name__ == "__main__":
+    main()
+=== FINE: main_integrator.py ===
+
+=== FILE: README.md ===
+# 🎯 Value Stock Finder
+
+**Sistema avanzato per identificare azioni sottovalutate usando i principi del value investing di Benjamin Graham**
+
+## 🚀 Quick Start
+
+```bash
+# Esegui il sistema completo
+python main_integrator.py
+
+# Solo screening azionario
+python src/mio_stock_finder.py
+=== FINE: README.md ===
+
+=== FILE: sviluppo.md ===
+# 🚀 DIARIO DI SVILUPPO - Value Stock Finder
+
+## 📅 2025-10-31
+### ✅ COMPLETATO
+- **Implementazione confronto con benchmark S&P500**
+- Sistema ora analizza automaticamente performance S&P500
+- Calcolo alpha (rendimento relativo azione vs mercato)
+- Identificazione azioni che battono il mercato
+- Esempio risultati: GM +80.1% vs S&P500 +76.9% (Alpha: +3.2%)
+- Output migliorato con metriche comparative
+
+### ✅ COMPLETATO
+- **Integrazione completa backtesting con screening reale**
+- Sistema esegue screening automatico e backtesting in sequenza
+- Menu backtesting integrato con 3 opzioni
+- Analisi comparativa: sconto vs rendimento storico 3 anni
+- Salvataggio risultati combinati in formato JSON
+
+### 🔧 PROSSIMI SVILUPPI
+- [x] Implementare src/backtester.py ✅
+- [x] Integrare backtesting con screening reale ✅  
+- [x] Aggiungere confronto con benchmark S&P500 ✅
+- [ ] Migliorare sistema di reporting
+- [ ] Aggiungere alert per opportunità eccezionali
+- [ ] Implementare dashboard web
+
+### 💡 NOTE TECNICHE
+- Backtesting integrato funziona con screening in tempo reale
+- Sistema identifica value traps (sconti con performance negative)
+- Confronto S&P500 rivela periodo di mercato molto bullish (+76.9% in 3 anni)
+- GM unica azione che batte il mercato tra le opportunità analizzate
+- Architettura modulare permette aggiunte future
+
+## 📅 2025-10-30
+### ✅ COMPLETATO
+- Riorganizzazione struttura repository GitHub
+- Creazione cartelle: src/, outputs/, data/, docs/
+- Implementazione main_integrator.py come coordinatore
+- 🎯 IMPLEMENTATO src/backtester.py (versione base)
+
+### 🔭 PROSSIME FUNZIONALITÀ
+- Dashboard web per visualizzazione risultati
+- Sistema notifiche per opportunità
+- Backtesting strategie complesse
+- Integrazione dati fondamentali avanzati
+- Analisi settoriale vs benchmark
+=== FINE: sviluppo.md ===
+
+=== FILE: uomo_macchina.txt ===
+Continua lo sviluppo di value-stock-finder. Vedi https://github.com/danielgrab27/value-stock-finder e sviluppo.md per lo stato attuale
+=== FINE: uomo_macchina.txt ===
+
+=== FILE: data\placeholder.txt ===
+DATA - Configurazioni e Dati
+
+Questa cartella conterrà:
+✅ config.json - Parametri e soglie del programma
+✅ stock_lists/ - Liste di ticker organizzate per settore  
+✅ historical/ - Dati storici per backtesting
+✅ benchmarks/ - Dati degli indici di riferimento
+=== FINE: data\placeholder.txt ===
+
+=== FILE: docs\placeholder.txt ===
+DOCS - Documentazione del Progetto
+
+📋 DOCUMENTAZIONE IN SVILUPPO:
+• piano_sviluppo.md - Roadmap e timeline
+• user_guide.md - Guida all'uso del software
+• technical_specs.md - Specifiche tecniche
+• api_reference.md - Documentazione API future
+
+🎯 PROSSIMI DOCUMENTI:
+- Value Investing Methodology
+- Sistema di Scoring spiegato
+- Esempi di utilizzo
+- Troubleshooting guide
+=== FINE: docs\placeholder.txt ===
+
+=== FILE: outputs\archive\placeholder.txt ===
+Cartella di archivio per vecchi risultati
+=== FINE: outputs\archive\placeholder.txt ===
+
+=== FILE: outputs\backtests\backtest_20251031_0158.json ===
+[
+  {
+    "ticker": "PFE",
+    "nome": "Pfizer Inc.",
+    "settore": "Healthcare",
+    "prezzo": 24.29,
+    "valore_intrinseco": 29.621710849054615,
+    "sconto": 17.999334596923795,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 80.99866919384759,
+    "quality_score_detailed": 6,
+    "pe_ratio": 12.851852,
+    "roe": 0.12168,
+    "debito_equity": 69.703,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 40.72,
+    "prezzo_attuale": 24.29,
+    "rendimento_totale_perc": -40.35,
+    "volatilita_annualizzata": 1.52,
+    "max_drawdown_perc": -55.31,
+    "sharpe_ratio": -26.57,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "CI",
+    "nome": "The Cigna Group",
+    "settore": "Healthcare",
+    "prezzo": 247.1,
+    "valore_intrinseco": 260.82080919129135,
+    "sconto": 5.260626724468226,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.52125344893645,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.539726,
+    "roe": 0.13182999,
+    "debito_equity": 76.102,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 308.47,
+    "prezzo_attuale": 247.1,
+    "rendimento_totale_perc": -19.89,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -31.36,
+    "sharpe_ratio": -10.76,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "F",
+    "nome": "Ford Motor Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 13.06,
+    "valore_intrinseco": 17.694901808148018,
+    "sconto": 26.193430505580835,
+    "qualita_ok": true,
+    "rischio": "Alto",
+    "investment_score": 85,
+    "quality_score_detailed": 4,
+    "pe_ratio": 11.162394,
+    "roe": 0.10295,
+    "debito_equity": 346.673,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.56,
+    "prezzo_attuale": 13.06,
+    "rendimento_totale_perc": 23.64,
+    "volatilita_annualizzata": 2.25,
+    "max_drawdown_perc": -36.51,
+    "sharpe_ratio": 10.52,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "GM",
+    "nome": "General Motors Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 68.67,
+    "valore_intrinseco": 91.58278222460814,
+    "sconto": 25.018657075097583,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.104962,
+    "roe": 0.04442,
+    "debito_equity": 195.437,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 38.13,
+    "prezzo_attuale": 68.67,
+    "rendimento_totale_perc": 80.1,
+    "volatilita_annualizzata": 2.18,
+    "max_drawdown_perc": -37.78,
+    "sharpe_ratio": 36.67,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "COP",
+    "nome": "ConocoPhillips",
+    "settore": "Energy",
+    "prezzo": 88.14,
+    "valore_intrinseco": 93.87470745626854,
+    "sconto": 6.1088951557479385,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 57.217790311495875,
+    "quality_score_detailed": 7,
+    "pe_ratio": 11.815013,
+    "roe": 0.1593,
+    "debito_equity": 35.883,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 115.79,
+    "prezzo_attuale": 88.14,
+    "rendimento_totale_perc": -23.88,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -36.3,
+    "sharpe_ratio": -12.88,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "EOG",
+    "nome": "EOG Resources, Inc.",
+    "settore": "Energy",
+    "prezzo": 105.46,
+    "valore_intrinseco": 111.4551983982802,
+    "sconto": 5.379020884119405,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.75804176823881,
+    "quality_score_detailed": 8,
+    "pe_ratio": 10.228904,
+    "roe": 0.19631,
+    "debito_equity": 15.719,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 120.59,
+    "prezzo_attuale": 105.46,
+    "rendimento_totale_perc": -12.54,
+    "volatilita_annualizzata": 1.76,
+    "max_drawdown_perc": -29.65,
+    "sharpe_ratio": -7.12,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "VALE",
+    "nome": "Vale S.A.",
+    "settore": "Basic Materials",
+    "prezzo": 11.89,
+    "valore_intrinseco": 37.110933698844065,
+    "sconto": 67.96092467926682,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 5,
+    "pe_ratio": 9.745902,
+    "roe": 0.12837,
+    "debito_equity": 50.133,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.48,
+    "prezzo_attuale": 11.89,
+    "rendimento_totale_perc": 13.4,
+    "volatilita_annualizzata": 1.97,
+    "max_drawdown_perc": -47.68,
+    "sharpe_ratio": 6.8,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "T",
+    "nome": "AT&T Inc.",
+    "settore": "Communication Services",
+    "prezzo": 24.68,
+    "valore_intrinseco": 32.797941627486324,
+    "sconto": 24.75137531400166,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.50275062800333,
+    "quality_score_detailed": 7,
+    "pe_ratio": 8.039088,
+    "roe": 0.19139999,
+    "debito_equity": 123.112,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 15.5,
+    "prezzo_attuale": 24.68,
+    "rendimento_totale_perc": 59.25,
+    "volatilita_annualizzata": 1.48,
+    "max_drawdown_perc": -32.01,
+    "sharpe_ratio": 40.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "VZ",
+    "nome": "Verizon Communications Inc.",
+    "settore": "Communication Services",
+    "prezzo": 38.96,
+    "valore_intrinseco": 51.275290101568416,
+    "sconto": 24.017982301365297,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 93.03596460273059,
+    "quality_score_detailed": 5,
+    "pe_ratio": 8.307036,
+    "roe": 0.19875,
+    "debito_equity": 160.282,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 30.54,
+    "prezzo_attuale": 38.96,
+    "rendimento_totale_perc": 27.59,
+    "volatilita_annualizzata": 1.38,
+    "max_drawdown_perc": -22.73,
+    "sharpe_ratio": 20.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "CMCSA",
+    "nome": "Comcast Corporation",
+    "settore": "Communication Services",
+    "prezzo": 27.32,
+    "valore_intrinseco": 59.609799949337194,
+    "sconto": 54.1686098205002,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 6,
+    "pe_ratio": 4.5306797,
+    "roe": 0.24919,
+    "debito_equity": 104.176,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 28.68,
+    "prezzo_attuale": 27.32,
+    "rendimento_totale_perc": -4.75,
+    "volatilita_annualizzata": 1.58,
+    "max_drawdown_perc": -37.92,
+    "sharpe_ratio": -3.0,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  }
+]
+=== FINE: outputs\backtests\backtest_20251031_0158.json ===
+
+=== FILE: outputs\backtests\backtest_20251031_0244.json ===
+[
+  {
+    "ticker": "S&P500",
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 3856.1,
+    "prezzo_attuale": 6822.34,
+    "rendimento_totale_perc": 76.92,
+    "volatilita_annualizzata": 1.0,
+    "max_drawdown_perc": -18.9,
+    "sharpe_ratio": 77.28,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "PFE",
+    "nome": "Pfizer Inc.",
+    "settore": "Healthcare",
+    "prezzo": 24.29,
+    "valore_intrinseco": 29.621710849054615,
+    "sconto": 17.999334596923795,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 80.99866919384759,
+    "quality_score_detailed": 6,
+    "pe_ratio": 12.851852,
+    "roe": 0.12168,
+    "debito_equity": 69.703,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 40.72,
+    "prezzo_attuale": 24.29,
+    "rendimento_totale_perc": -40.35,
+    "volatilita_annualizzata": 1.52,
+    "max_drawdown_perc": -55.31,
+    "sharpe_ratio": -26.57,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -117.27,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "CI",
+    "nome": "The Cigna Group",
+    "settore": "Healthcare",
+    "prezzo": 247.1,
+    "valore_intrinseco": 260.82080919129135,
+    "sconto": 5.260626724468226,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.52125344893645,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.539726,
+    "roe": 0.13182999,
+    "debito_equity": 76.102,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 308.47,
+    "prezzo_attuale": 247.1,
+    "rendimento_totale_perc": -19.89,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -31.36,
+    "sharpe_ratio": -10.76,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -96.81,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "F",
+    "nome": "Ford Motor Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 13.06,
+    "valore_intrinseco": 17.694901808148018,
+    "sconto": 26.193430505580835,
+    "qualita_ok": true,
+    "rischio": "Alto",
+    "investment_score": 85,
+    "quality_score_detailed": 4,
+    "pe_ratio": 11.162394,
+    "roe": 0.10295,
+    "debito_equity": 346.673,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.56,
+    "prezzo_attuale": 13.06,
+    "rendimento_totale_perc": 23.64,
+    "volatilita_annualizzata": 2.25,
+    "max_drawdown_perc": -36.51,
+    "sharpe_ratio": 10.52,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -53.28,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "GM",
+    "nome": "General Motors Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 68.67,
+    "valore_intrinseco": 91.58278222460814,
+    "sconto": 25.018657075097583,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.104962,
+    "roe": 0.04442,
+    "debito_equity": 195.437,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 38.13,
+    "prezzo_attuale": 68.67,
+    "rendimento_totale_perc": 80.1,
+    "volatilita_annualizzata": 2.18,
+    "max_drawdown_perc": -37.78,
+    "sharpe_ratio": 36.67,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": 3.18,
+    "battuto_sp500": true,
+    "performance_relativa": "SOPRA"
+  },
+  {
+    "ticker": "COP",
+    "nome": "ConocoPhillips",
+    "settore": "Energy",
+    "prezzo": 88.14,
+    "valore_intrinseco": 93.87470745626854,
+    "sconto": 6.1088951557479385,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 57.217790311495875,
+    "quality_score_detailed": 7,
+    "pe_ratio": 11.815013,
+    "roe": 0.1593,
+    "debito_equity": 35.883,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 115.79,
+    "prezzo_attuale": 88.14,
+    "rendimento_totale_perc": -23.88,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -36.3,
+    "sharpe_ratio": -12.88,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -100.8,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "EOG",
+    "nome": "EOG Resources, Inc.",
+    "settore": "Energy",
+    "prezzo": 105.46,
+    "valore_intrinseco": 111.4551983982802,
+    "sconto": 5.379020884119405,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.75804176823881,
+    "quality_score_detailed": 8,
+    "pe_ratio": 10.228904,
+    "roe": 0.19631,
+    "debito_equity": 15.719,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 120.59,
+    "prezzo_attuale": 105.46,
+    "rendimento_totale_perc": -12.54,
+    "volatilita_annualizzata": 1.76,
+    "max_drawdown_perc": -29.65,
+    "sharpe_ratio": -7.12,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -89.46,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "VALE",
+    "nome": "Vale S.A.",
+    "settore": "Basic Materials",
+    "prezzo": 11.89,
+    "valore_intrinseco": 37.110933698844065,
+    "sconto": 67.96092467926682,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 5,
+    "pe_ratio": 9.745902,
+    "roe": 0.12837,
+    "debito_equity": 50.133,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.48,
+    "prezzo_attuale": 11.89,
+    "rendimento_totale_perc": 13.4,
+    "volatilita_annualizzata": 1.97,
+    "max_drawdown_perc": -47.68,
+    "sharpe_ratio": 6.8,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -63.52,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "T",
+    "nome": "AT&T Inc.",
+    "settore": "Communication Services",
+    "prezzo": 24.68,
+    "valore_intrinseco": 32.797941627486324,
+    "sconto": 24.75137531400166,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.50275062800333,
+    "quality_score_detailed": 7,
+    "pe_ratio": 8.039088,
+    "roe": 0.19139999,
+    "debito_equity": 123.112,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 15.5,
+    "prezzo_attuale": 24.68,
+    "rendimento_totale_perc": 59.25,
+    "volatilita_annualizzata": 1.48,
+    "max_drawdown_perc": -32.01,
+    "sharpe_ratio": 40.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -17.67,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "VZ",
+    "nome": "Verizon Communications Inc.",
+    "settore": "Communication Services",
+    "prezzo": 38.96,
+    "valore_intrinseco": 51.275290101568416,
+    "sconto": 24.017982301365297,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 93.03596460273059,
+    "quality_score_detailed": 5,
+    "pe_ratio": 8.307036,
+    "roe": 0.19875,
+    "debito_equity": 160.282,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 30.54,
+    "prezzo_attuale": 38.96,
+    "rendimento_totale_perc": 27.59,
+    "volatilita_annualizzata": 1.38,
+    "max_drawdown_perc": -22.73,
+    "sharpe_ratio": 20.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -49.33,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "CMCSA",
+    "nome": "Comcast Corporation",
+    "settore": "Communication Services",
+    "prezzo": 27.32,
+    "valore_intrinseco": 59.609799949337194,
+    "sconto": 54.1686098205002,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 6,
+    "pe_ratio": 4.5306797,
+    "roe": 0.24919,
+    "debito_equity": 104.176,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 28.68,
+    "prezzo_attuale": 27.32,
+    "rendimento_totale_perc": -4.75,
+    "volatilita_annualizzata": 1.58,
+    "max_drawdown_perc": -37.92,
+    "sharpe_ratio": -3.0,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -81.67,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  }
+]
+=== FINE: outputs\backtests\backtest_20251031_0244.json ===
+
+=== FILE: outputs\backtests\backtest_20251031_0305.json ===
+[
+  {
+    "ticker": "PFE",
+    "nome": "Pfizer Inc.",
+    "settore": "Healthcare",
+    "prezzo": 24.29,
+    "valore_intrinseco": 29.621710849054615,
+    "sconto": 17.999334596923795,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 80.99866919384759,
+    "quality_score_detailed": 6,
+    "pe_ratio": 12.851852,
+    "roe": 0.12168,
+    "debito_equity": 69.703,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 40.72,
+    "prezzo_attuale": 24.29,
+    "rendimento_totale_perc": -40.35,
+    "volatilita_annualizzata": 1.52,
+    "max_drawdown_perc": -55.31,
+    "sharpe_ratio": -26.57,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "CI",
+    "nome": "The Cigna Group",
+    "settore": "Healthcare",
+    "prezzo": 247.1,
+    "valore_intrinseco": 260.82080919129135,
+    "sconto": 5.260626724468226,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.52125344893645,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.539726,
+    "roe": 0.13182999,
+    "debito_equity": 76.102,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 308.47,
+    "prezzo_attuale": 247.1,
+    "rendimento_totale_perc": -19.89,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -31.36,
+    "sharpe_ratio": -10.76,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "F",
+    "nome": "Ford Motor Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 13.06,
+    "valore_intrinseco": 17.694901808148018,
+    "sconto": 26.193430505580835,
+    "qualita_ok": true,
+    "rischio": "Alto",
+    "investment_score": 85,
+    "quality_score_detailed": 4,
+    "pe_ratio": 11.162394,
+    "roe": 0.10295,
+    "debito_equity": 346.673,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.56,
+    "prezzo_attuale": 13.06,
+    "rendimento_totale_perc": 23.64,
+    "volatilita_annualizzata": 2.25,
+    "max_drawdown_perc": -36.51,
+    "sharpe_ratio": 10.52,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "GM",
+    "nome": "General Motors Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 68.67,
+    "valore_intrinseco": 91.58278222460814,
+    "sconto": 25.018657075097583,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.104962,
+    "roe": 0.04442,
+    "debito_equity": 195.437,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 38.13,
+    "prezzo_attuale": 68.67,
+    "rendimento_totale_perc": 80.1,
+    "volatilita_annualizzata": 2.18,
+    "max_drawdown_perc": -37.78,
+    "sharpe_ratio": 36.67,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "COP",
+    "nome": "ConocoPhillips",
+    "settore": "Energy",
+    "prezzo": 88.14,
+    "valore_intrinseco": 93.87470745626854,
+    "sconto": 6.1088951557479385,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 57.217790311495875,
+    "quality_score_detailed": 7,
+    "pe_ratio": 11.815013,
+    "roe": 0.1593,
+    "debito_equity": 35.883,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 115.79,
+    "prezzo_attuale": 88.14,
+    "rendimento_totale_perc": -23.88,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -36.3,
+    "sharpe_ratio": -12.88,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "EOG",
+    "nome": "EOG Resources, Inc.",
+    "settore": "Energy",
+    "prezzo": 105.46,
+    "valore_intrinseco": 111.4551983982802,
+    "sconto": 5.379020884119405,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.75804176823881,
+    "quality_score_detailed": 8,
+    "pe_ratio": 10.228904,
+    "roe": 0.19631,
+    "debito_equity": 15.719,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 120.59,
+    "prezzo_attuale": 105.46,
+    "rendimento_totale_perc": -12.54,
+    "volatilita_annualizzata": 1.76,
+    "max_drawdown_perc": -29.65,
+    "sharpe_ratio": -7.12,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "VALE",
+    "nome": "Vale S.A.",
+    "settore": "Basic Materials",
+    "prezzo": 11.89,
+    "valore_intrinseco": 37.110933698844065,
+    "sconto": 67.96092467926682,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 5,
+    "pe_ratio": 9.745902,
+    "roe": 0.12837,
+    "debito_equity": 50.133,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.48,
+    "prezzo_attuale": 11.89,
+    "rendimento_totale_perc": 13.4,
+    "volatilita_annualizzata": 1.97,
+    "max_drawdown_perc": -47.68,
+    "sharpe_ratio": 6.8,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "T",
+    "nome": "AT&T Inc.",
+    "settore": "Communication Services",
+    "prezzo": 24.68,
+    "valore_intrinseco": 32.797941627486324,
+    "sconto": 24.75137531400166,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.50275062800333,
+    "quality_score_detailed": 7,
+    "pe_ratio": 8.039088,
+    "roe": 0.19139999,
+    "debito_equity": 123.112,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 15.5,
+    "prezzo_attuale": 24.68,
+    "rendimento_totale_perc": 59.25,
+    "volatilita_annualizzata": 1.48,
+    "max_drawdown_perc": -32.01,
+    "sharpe_ratio": 40.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "VZ",
+    "nome": "Verizon Communications Inc.",
+    "settore": "Communication Services",
+    "prezzo": 38.96,
+    "valore_intrinseco": 51.275290101568416,
+    "sconto": 24.017982301365297,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 93.03596460273059,
+    "quality_score_detailed": 5,
+    "pe_ratio": 8.307036,
+    "roe": 0.19875,
+    "debito_equity": 160.282,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 30.54,
+    "prezzo_attuale": 38.96,
+    "rendimento_totale_perc": 27.59,
+    "volatilita_annualizzata": 1.38,
+    "max_drawdown_perc": -22.73,
+    "sharpe_ratio": 20.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "CMCSA",
+    "nome": "Comcast Corporation",
+    "settore": "Communication Services",
+    "prezzo": 27.32,
+    "valore_intrinseco": 59.609799949337194,
+    "sconto": 54.1686098205002,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 6,
+    "pe_ratio": 4.5306797,
+    "roe": 0.24919,
+    "debito_equity": 104.176,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 28.68,
+    "prezzo_attuale": 27.32,
+    "rendimento_totale_perc": -4.75,
+    "volatilita_annualizzata": 1.58,
+    "max_drawdown_perc": -37.92,
+    "sharpe_ratio": -3.0,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  }
+]
+=== FINE: outputs\backtests\backtest_20251031_0305.json ===
+
+=== FILE: outputs\backtests\backtest_20251031_0311.json ===
+[
+  {
+    "ticker": "S&P500",
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 3856.1,
+    "prezzo_attuale": 6822.34,
+    "rendimento_totale_perc": 76.92,
+    "volatilita_annualizzata": 1.0,
+    "max_drawdown_perc": -18.9,
+    "sharpe_ratio": 77.28,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31"
+  },
+  {
+    "ticker": "PFE",
+    "nome": "Pfizer Inc.",
+    "settore": "Healthcare",
+    "prezzo": 24.29,
+    "valore_intrinseco": 29.621710849054615,
+    "sconto": 17.999334596923795,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 80.99866919384759,
+    "quality_score_detailed": 6,
+    "pe_ratio": 12.851852,
+    "roe": 0.12168,
+    "debito_equity": 69.703,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 40.72,
+    "prezzo_attuale": 24.29,
+    "rendimento_totale_perc": -40.35,
+    "volatilita_annualizzata": 1.52,
+    "max_drawdown_perc": -55.31,
+    "sharpe_ratio": -26.57,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -117.27,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "CI",
+    "nome": "The Cigna Group",
+    "settore": "Healthcare",
+    "prezzo": 247.1,
+    "valore_intrinseco": 260.82080919129135,
+    "sconto": 5.260626724468226,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.52125344893645,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.539726,
+    "roe": 0.13182999,
+    "debito_equity": 76.102,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 308.47,
+    "prezzo_attuale": 247.1,
+    "rendimento_totale_perc": -19.89,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -31.36,
+    "sharpe_ratio": -10.76,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -96.81,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "F",
+    "nome": "Ford Motor Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 13.06,
+    "valore_intrinseco": 17.694901808148018,
+    "sconto": 26.193430505580835,
+    "qualita_ok": true,
+    "rischio": "Alto",
+    "investment_score": 85,
+    "quality_score_detailed": 4,
+    "pe_ratio": 11.162394,
+    "roe": 0.10295,
+    "debito_equity": 346.673,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.56,
+    "prezzo_attuale": 13.06,
+    "rendimento_totale_perc": 23.64,
+    "volatilita_annualizzata": 2.25,
+    "max_drawdown_perc": -36.51,
+    "sharpe_ratio": 10.52,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -53.28,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "GM",
+    "nome": "General Motors Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 68.67,
+    "valore_intrinseco": 91.58278222460814,
+    "sconto": 25.018657075097583,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.104962,
+    "roe": 0.04442,
+    "debito_equity": 195.437,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 38.13,
+    "prezzo_attuale": 68.67,
+    "rendimento_totale_perc": 80.1,
+    "volatilita_annualizzata": 2.18,
+    "max_drawdown_perc": -37.78,
+    "sharpe_ratio": 36.67,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": 3.18,
+    "battuto_sp500": true,
+    "performance_relativa": "SOPRA"
+  },
+  {
+    "ticker": "COP",
+    "nome": "ConocoPhillips",
+    "settore": "Energy",
+    "prezzo": 88.14,
+    "valore_intrinseco": 93.87470745626854,
+    "sconto": 6.1088951557479385,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 57.217790311495875,
+    "quality_score_detailed": 7,
+    "pe_ratio": 11.815013,
+    "roe": 0.1593,
+    "debito_equity": 35.883,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 115.79,
+    "prezzo_attuale": 88.14,
+    "rendimento_totale_perc": -23.88,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -36.3,
+    "sharpe_ratio": -12.88,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -100.8,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "EOG",
+    "nome": "EOG Resources, Inc.",
+    "settore": "Energy",
+    "prezzo": 105.46,
+    "valore_intrinseco": 111.4551983982802,
+    "sconto": 5.379020884119405,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.75804176823881,
+    "quality_score_detailed": 8,
+    "pe_ratio": 10.228904,
+    "roe": 0.19631,
+    "debito_equity": 15.719,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 120.59,
+    "prezzo_attuale": 105.46,
+    "rendimento_totale_perc": -12.54,
+    "volatilita_annualizzata": 1.76,
+    "max_drawdown_perc": -29.65,
+    "sharpe_ratio": -7.12,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -89.46,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "VALE",
+    "nome": "Vale S.A.",
+    "settore": "Basic Materials",
+    "prezzo": 11.89,
+    "valore_intrinseco": 37.110933698844065,
+    "sconto": 67.96092467926682,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 5,
+    "pe_ratio": 9.745902,
+    "roe": 0.12837,
+    "debito_equity": 50.133,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.48,
+    "prezzo_attuale": 11.89,
+    "rendimento_totale_perc": 13.4,
+    "volatilita_annualizzata": 1.97,
+    "max_drawdown_perc": -47.68,
+    "sharpe_ratio": 6.8,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -63.52,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "T",
+    "nome": "AT&T Inc.",
+    "settore": "Communication Services",
+    "prezzo": 24.68,
+    "valore_intrinseco": 32.797941627486324,
+    "sconto": 24.75137531400166,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.50275062800333,
+    "quality_score_detailed": 7,
+    "pe_ratio": 8.039088,
+    "roe": 0.19139999,
+    "debito_equity": 123.112,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 15.5,
+    "prezzo_attuale": 24.68,
+    "rendimento_totale_perc": 59.25,
+    "volatilita_annualizzata": 1.48,
+    "max_drawdown_perc": -32.01,
+    "sharpe_ratio": 40.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -17.67,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "VZ",
+    "nome": "Verizon Communications Inc.",
+    "settore": "Communication Services",
+    "prezzo": 38.96,
+    "valore_intrinseco": 51.275290101568416,
+    "sconto": 24.017982301365297,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 93.03596460273059,
+    "quality_score_detailed": 5,
+    "pe_ratio": 8.307036,
+    "roe": 0.19875,
+    "debito_equity": 160.282,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 30.54,
+    "prezzo_attuale": 38.96,
+    "rendimento_totale_perc": 27.59,
+    "volatilita_annualizzata": 1.38,
+    "max_drawdown_perc": -22.73,
+    "sharpe_ratio": 20.01,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -49.33,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "CMCSA",
+    "nome": "Comcast Corporation",
+    "settore": "Communication Services",
+    "prezzo": 27.32,
+    "valore_intrinseco": 59.609799949337194,
+    "sconto": 54.1686098205002,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 6,
+    "pe_ratio": 4.5306797,
+    "roe": 0.24919,
+    "debito_equity": 104.176,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 28.68,
+    "prezzo_attuale": 27.32,
+    "rendimento_totale_perc": -4.75,
+    "volatilita_annualizzata": 1.58,
+    "max_drawdown_perc": -37.92,
+    "sharpe_ratio": -3.0,
+    "data_inizio": "2022-11-01",
+    "data_fine": "2025-10-31",
+    "rendimento_sp500_perc": 76.92,
+    "alpha_perc": -81.67,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  }
+]
+=== FINE: outputs\backtests\backtest_20251031_0311.json ===
+
+=== FILE: outputs\backtests\backtest_20251101_1855.json ===
+[
+  {
+    "ticker": "S&P500",
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 3759.69,
+    "prezzo_attuale": 6840.2,
+    "rendimento_totale_perc": 81.94,
+    "volatilita_annualizzata": 0.99,
+    "max_drawdown_perc": -18.9,
+    "sharpe_ratio": 82.68,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01"
+  },
+  {
+    "ticker": "PFE",
+    "nome": "Pfizer Inc.",
+    "settore": "Healthcare",
+    "prezzo": 24.65,
+    "valore_intrinseco": 29.621710849054615,
+    "sconto": 16.784009790620484,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 78.56801958124097,
+    "quality_score_detailed": 6,
+    "pe_ratio": 13.042328,
+    "roe": 0.12168,
+    "debito_equity": 69.703,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 39.92,
+    "prezzo_attuale": 24.65,
+    "rendimento_totale_perc": -38.26,
+    "volatilita_annualizzata": 1.52,
+    "max_drawdown_perc": -55.31,
+    "sharpe_ratio": -25.2,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -120.2,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "CI",
+    "nome": "The Cigna Group",
+    "settore": "Healthcare",
+    "prezzo": 244.41,
+    "valore_intrinseco": 324.0254684139427,
+    "sconto": 24.57074402319323,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.14148804638646,
+    "quality_score_detailed": 4,
+    "pe_ratio": 10.824181,
+    "roe": 0.15538,
+    "debito_equity": 81.021,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 304.42,
+    "prezzo_attuale": 244.41,
+    "rendimento_totale_perc": -19.71,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -32.1,
+    "sharpe_ratio": -10.66,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -101.65,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "F",
+    "nome": "Ford Motor Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 13.13,
+    "valore_intrinseco": 17.694901808148018,
+    "sconto": 25.797836335243208,
+    "qualita_ok": true,
+    "rischio": "Alto",
+    "investment_score": 85,
+    "quality_score_detailed": 4,
+    "pe_ratio": 11.222222,
+    "roe": 0.10295,
+    "debito_equity": 346.673,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 10.3,
+    "prezzo_attuale": 13.13,
+    "rendimento_totale_perc": 27.54,
+    "volatilita_annualizzata": 2.25,
+    "max_drawdown_perc": -36.51,
+    "sharpe_ratio": 12.26,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -54.4,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "GM",
+    "nome": "General Motors Company",
+    "settore": "Consumer Cyclical",
+    "prezzo": 69.09,
+    "valore_intrinseco": 91.58278222460814,
+    "sconto": 24.560055589318363,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.12011117863673,
+    "quality_score_detailed": 3,
+    "pe_ratio": 13.185114,
+    "roe": 0.04442,
+    "debito_equity": 195.437,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 37.32,
+    "prezzo_attuale": 69.09,
+    "rendimento_totale_perc": 85.11,
+    "volatilita_annualizzata": 2.18,
+    "max_drawdown_perc": -37.78,
+    "sharpe_ratio": 38.98,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": 3.17,
+    "battuto_sp500": true,
+    "performance_relativa": "SOPRA"
+  },
+  {
+    "ticker": "COP",
+    "nome": "ConocoPhillips",
+    "settore": "Energy",
+    "prezzo": 88.86,
+    "valore_intrinseco": 93.87470745626854,
+    "sconto": 5.3419154020848865,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.68383080416977,
+    "quality_score_detailed": 7,
+    "pe_ratio": 11.911529,
+    "roe": 0.1593,
+    "debito_equity": 35.883,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 114.64,
+    "prezzo_attuale": 88.86,
+    "rendimento_totale_perc": -22.49,
+    "volatilita_annualizzata": 1.85,
+    "max_drawdown_perc": -36.3,
+    "sharpe_ratio": -12.13,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -104.43,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "EOG",
+    "nome": "EOG Resources, Inc.",
+    "settore": "Energy",
+    "prezzo": 105.84,
+    "valore_intrinseco": 111.4551983982802,
+    "sconto": 5.03807671510712,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 55.07615343021424,
+    "quality_score_detailed": 8,
+    "pe_ratio": 10.26576,
+    "roe": 0.19631,
+    "debito_equity": 15.719,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 119.95,
+    "prezzo_attuale": 105.84,
+    "rendimento_totale_perc": -11.76,
+    "volatilita_annualizzata": 1.76,
+    "max_drawdown_perc": -29.65,
+    "sharpe_ratio": -6.68,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -93.7,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "VALE",
+    "nome": "Vale S.A.",
+    "settore": "Basic Materials",
+    "prezzo": 12.09,
+    "valore_intrinseco": 38.487918883722465,
+    "sconto": 68.5875455190871,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 5,
+    "pe_ratio": 9.372093,
+    "roe": 0.13274999,
+    "debito_equity": 50.201,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 9.97,
+    "prezzo_attuale": 12.09,
+    "rendimento_totale_perc": 21.27,
+    "volatilita_annualizzata": 1.96,
+    "max_drawdown_perc": -47.68,
+    "sharpe_ratio": 10.83,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -60.67,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "T",
+    "nome": "AT&T Inc.",
+    "settore": "Communication Services",
+    "prezzo": 24.75,
+    "valore_intrinseco": 32.797941627486324,
+    "sconto": 24.53794728612403,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 94.07589457224806,
+    "quality_score_detailed": 7,
+    "pe_ratio": 8.06189,
+    "roe": 0.19139999,
+    "debito_equity": 123.112,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 15.57,
+    "prezzo_attuale": 24.75,
+    "rendimento_totale_perc": 59.01,
+    "volatilita_annualizzata": 1.48,
+    "max_drawdown_perc": -32.01,
+    "sharpe_ratio": 39.85,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -22.93,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "VZ",
+    "nome": "Verizon Communications Inc.",
+    "settore": "Communication Services",
+    "prezzo": 39.74,
+    "valore_intrinseco": 51.27323205143207,
+    "sconto": 22.49367084927103,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 89.98734169854205,
+    "quality_score_detailed": 5,
+    "pe_ratio": 8.473348,
+    "roe": 0.19875,
+    "debito_equity": 164.799,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 30.81,
+    "prezzo_attuale": 39.74,
+    "rendimento_totale_perc": 28.97,
+    "volatilita_annualizzata": 1.38,
+    "max_drawdown_perc": -22.73,
+    "sharpe_ratio": 20.99,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -52.97,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  },
+  {
+    "ticker": "CMCSA",
+    "nome": "Comcast Corporation",
+    "settore": "Communication Services",
+    "prezzo": 27.835,
+    "valore_intrinseco": 59.70345216149565,
+    "sconto": 53.37790530988502,
+    "qualita_ok": true,
+    "rischio": "Medio",
+    "investment_score": 95,
+    "quality_score_detailed": 6,
+    "pe_ratio": 4.623754,
+    "roe": 0.24186,
+    "debito_equity": 101.462,
+    "periodo_analisi_anni": 3,
+    "prezzo_iniziale": 28.09,
+    "prezzo_attuale": 27.84,
+    "rendimento_totale_perc": -0.89,
+    "volatilita_annualizzata": 1.58,
+    "max_drawdown_perc": -37.92,
+    "sharpe_ratio": -0.56,
+    "data_inizio": "2022-11-02",
+    "data_fine": "2025-11-01",
+    "rendimento_sp500_perc": 81.94,
+    "alpha_perc": -82.83,
+    "battuto_sp500": false,
+    "performance_relativa": "SOTTO"
+  }
+]
+=== FINE: outputs\backtests\backtest_20251101_1855.json ===
+
+=== FILE: outputs\backtests\placeholder.txt ===
+Cartella per i risultati del backtesting
+=== FINE: outputs\backtests\placeholder.txt ===
+
+=== FILE: outputs\reports\placeholder.txt ===
+Cartella per i report combinati
+=== FINE: outputs\reports\placeholder.txt ===
+
+=== FILE: outputs\screens\placeholder.txt ===
+Cartella per i risultati degli screening giornalieri
+I file CSV e JSON degli screening verranno salvati qui
+=== FINE: outputs\screens\placeholder.txt ===
+
+=== FILE: src\backtester.py ===
+"""
+📊 BACKTESTING MODULE - Value Stock Finder
+Analizza performance storica delle strategie value
+"""
+
+import yfinance as yf
+import pandas as pd
+from datetime import datetime, timedelta
+import json
+
+def analizza_performance_storica(ticker, anni=3):
+    """
+    Analizza la performance storica di un'azione - VERSIONE ULTRA-SICURA
+    """
+    try:
+        print(f"📈 Analisi storica {ticker} ({anni} anni)...")
+        
+        # Calcola date
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=anni*365)
+        
+        # 🔥 VERSIONE SICURA: usa download semplice
+        try:
+            stock_data = yf.download(
+                ticker, 
+                start=start_date, 
+                end=end_date, 
+                progress=False,
+                auto_adjust=True
+            )
+        except Exception as e:
+            print(f"   ❌ Download fallito per {ticker}: {e}")
+            return None
+        
+        # 🔥 CONTROLLO MOLTO ESPLICITO
+        if stock_data is None:
+            return None
+            
+        if hasattr(stock_data, 'empty') and stock_data.empty:
+            return None
+            
+        # 🔥 CONVERTI in DataFrame semplice se necessario
+        if isinstance(stock_data, pd.DataFrame):
+            # Se è un DataFrame multi-colonna, prendi solo Close
+            if 'Close' in stock_data.columns:
+                close_series = stock_data['Close']
+            else:
+                # Se non ha colonna Close, usa la prima colonna
+                close_series = stock_data.iloc[:, 0]
+        else:
+            # Se non è un DataFrame, non possiamo procedere
+            return None
+        
+        # 🔥 VERIFICA DATI
+        if len(close_series) < 30:
+            return None
+            
+        # Rimuovi valori NaN
+        close_series = close_series.dropna()
+        if len(close_series) < 30:
+            return None
+        
+        # Calcola metriche performance
+        prezzo_iniziale = close_series.iloc[0]
+        prezzo_attuale = close_series.iloc[-1]
+        
+        # 🔥 CONVERTI ESPLICITAMENTE a float
+        try:
+            prezzo_iniziale = float(prezzo_iniziale)
+            prezzo_attuale = float(prezzo_attuale)
+        except:
+            return None
+        
+        rendimento_totale = ((prezzo_attuale - prezzo_iniziale) / prezzo_iniziale) * 100
+        
+        # Volatilità
+        rendimenti_giornalieri = close_series.pct_change().dropna()
+        if len(rendimenti_giornalieri) < 10:
+            return None
+            
+        volatilita = float(rendimenti_giornalieri.std() * 100)
+        
+        # Massimo drawdown
+        rolling_max = close_series.expanding().max()
+        drawdown = (close_series - rolling_max) / rolling_max * 100
+        max_drawdown = float(drawdown.min())
+        
+        return {
+            'ticker': ticker,
+            'periodo_analisi_anni': anni,
+            'prezzo_iniziale': round(prezzo_iniziale, 2),
+            'prezzo_attuale': round(prezzo_attuale, 2),
+            'rendimento_totale_perc': round(rendimento_totale, 2),
+            'volatilita_annualizzata': round(volatilita, 2),
+            'max_drawdown_perc': round(max_drawdown, 2),
+            'sharpe_ratio': round(rendimento_totale / volatilita, 2) if volatilita > 0 else 0,
+            'data_inizio': start_date.strftime('%Y-%m-%d'),
+            'data_fine': end_date.strftime('%Y-%m-%d')
+        }
+        
+    except Exception as e:
+        print(f"❌ Errore analisi storica {ticker}: {str(e)[:100]}...")
+        return None
+
+def backtest_opportunita(opportunita, anni=3):
+    """
+    Riceve le opportunità dallo screener e fa backtesting
+    """
+    print(f"\n🎯 BACKTESTING {len(opportunita)} OPPORTUNITÀ ({anni} anni)")
+    print("=" * 50)
+    
+    risultati = []
+    
+    for opp in opportunita[:10]:  # Prime 10 opportunità per test
+        ticker = opp['ticker']
+        risultato_backtest = analizza_performance_storica(ticker, anni)
+        
+        if risultato_backtest:
+            # Combina dati screening + backtesting
+            risultato_combinato = {
+                **opp,  # Dati dallo screening
+                **risultato_backtest  # Dati dal backtesting
+            }
+            risultati.append(risultato_combinato)
+            
+            # Output progressivo
+            rendimento = risultato_backtest['rendimento_totale_perc']
+            drawdown = risultato_backtest['max_drawdown_perc']
+            print(f"✅ {ticker}: {rendimento:>6.1f}% | Max Drawdown: {drawdown:>5.1f}%")
+
+    risultati = aggiungi_confronto_sp500(risultati, anni)
+    
+    return risultati
+
+def salva_risultati_backtest(risultati, filename=None):
+    """Salva i risultati del backtesting"""
+    if not filename:
+        data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
+        filename = f"outputs/backtests/backtest_{data_oggi}.json"
+    
+    with open(filename, 'w') as f:
+        json.dump(risultati, f, indent=2)
+    
+    print(f"💾 Risultati backtest salvati in: {filename}")
+    return filename
+
+def test_backtest_sistema():
+    """Test completo del sistema di backtesting"""
+    print("🧪 TEST SISTEMA BACKTESTING")
+    print("=" * 30)
+    
+    # Simula opportunità come le troverebbe lo screener
+    opportunita_test = [
+        {'ticker': 'AAPL', 'sconto': 15.5, 'investment_score': 85, 'rischio': 'Basso'},
+        {'ticker': 'MSFT', 'sconto': 12.2, 'investment_score': 78, 'rischio': 'Basso'},
+        {'ticker': 'JNJ', 'sconto': 8.7, 'investment_score': 72, 'rischio': 'Basso'},
+        {'ticker': 'JPM', 'sconto': 5.3, 'investment_score': 65, 'rischio': 'Medio'}
+    ]
+    
+    risultati = backtest_opportunita(opportunita_test, anni=3)
+    print(f"\n📊 Backtesting completato: {len(risultati)} azioni analizzate")
+    
+    if risultati:
+        salva_risultati_backtest(risultati)
+    
+    return risultati
+
+def analizza_performance_sp500(anni=3):
+    """
+    Analizza la performance dell'S&P500 nello stesso periodo
+    """
+    try:
+        print(f"📊 Analisi performance S&P500 ({anni} anni)...")
+        
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=anni*365)
+        
+        # Download dati S&P500
+        sp500_data = yf.download('^GSPC', start=start_date, end=end_date, progress=False, auto_adjust=True)
+        
+        if sp500_data.empty or len(sp500_data) < 30:
+            print("❌ Dati S&P500 insufficienti")
+            return None
+        
+        close_prices = sp500_data['Close']
+        prezzo_iniziale = float(close_prices.iloc[0])
+        prezzo_attuale = float(close_prices.iloc[-1])
+        rendimento_totale = ((prezzo_attuale - prezzo_iniziale) / prezzo_iniziale) * 100
+        
+        # Calcola volatilità e drawdown
+        rendimenti_giornalieri = close_prices.pct_change().dropna()
+        volatilita = float(rendimenti_giornalieri.std() * 100)
+        
+        rolling_max = close_prices.expanding().max()
+        drawdown = (close_prices - rolling_max) / rolling_max * 100
+        max_drawdown = float(drawdown.min())
+        
+        performance_sp500 = {
+            'ticker': 'S&P500',
+            'periodo_analisi_anni': anni,
+            'prezzo_iniziale': round(prezzo_iniziale, 2),
+            'prezzo_attuale': round(prezzo_attuale, 2),
+            'rendimento_totale_perc': round(rendimento_totale, 2),
+            'volatilita_annualizzata': round(volatilita, 2),
+            'max_drawdown_perc': round(max_drawdown, 2),
+            'sharpe_ratio': round(rendimento_totale / volatilita, 2) if volatilita > 0 else 0,
+            'data_inizio': start_date.strftime('%Y-%m-%d'),
+            'data_fine': end_date.strftime('%Y-%m-%d')
+        }
+        
+        print(f"✅ S&P500: {rendimento_totale:.1f}% rendimento")
+        return performance_sp500
+        
+    except Exception as e:
+        print(f"❌ Errore analisi S&P500: {e}")
+        return None
+
+def aggiungi_confronto_sp500(risultati_backtest, anni=3):
+    """
+    Aggiunge confronto con S&P500 a tutti i risultati
+    """
+    performance_sp500 = analizza_performance_sp500(anni)
+    
+    if not performance_sp500:
+        return risultati_backtest
+    
+    rendimento_sp500 = performance_sp500['rendimento_totale_perc']
+    
+    for risultato in risultati_backtest:
+        # Calcola alpha (performance relativa)
+        rendimento_azione = risultato['rendimento_totale_perc']
+        alpha = rendimento_azione - rendimento_sp500
+        
+        # Aggiungi metriche di confronto
+        risultato['rendimento_sp500_perc'] = rendimento_sp500
+        risultato['alpha_perc'] = round(alpha, 2)
+        risultato['battuto_sp500'] = alpha > 0
+        risultato['performance_relativa'] = "SOPRA" if alpha > 0 else "SOTTO"
+    
+    # Aggiungi i dati S&P500 come primo elemento
+    risultati_backtest.insert(0, performance_sp500)
+    
+    return risultati_backtest
+
+if __name__ == "__main__":
+    test_backtest_sistema()
+=== FINE: src\backtester.py ===
+
+=== FILE: src\mio_stock_finder.py ===
+print("🎯 IL MIO VALUE STOCK FINDER AVANZATO!")
+print("=" * 50)
+
+import yfinance as yf
+import pandas as pd
+from datetime import datetime
+import time  # 🔥 NUOVO IMPORT per le pause
+
+# ==================== CONFIGURAZIONE CENTRALIZZATA ====================
+
+CONFIG = {
+    'MIN_DISCOUNT': 5.0,           # Sconto minimo per considerare un'opportunità
+    'MIN_QUALITY_SCORE': 3,        # Punteggio qualità minimo
+    'MAX_RISK_LEVEL': 'Medio',     # Livello rischio massimo accettabile
+    'SCORING_WEIGHTS': {
+        'value': 0.5,              # Peso del valore (sconto)
+        'quality': 0.3,            # Peso della qualità 
+        'risk': 0.2                # Peso del rischio
+    },
+    'MIN_INVESTMENT_SCORE': 60,    # Punteggio minimo per "ACQUISTA"
+    'PAUSE_EVERY': 10,             # 🔥 PAUSA ogni N azioni
+    'PAUSE_SECONDS': 2             # 🔥 Secondi di pausa
+}
+
+def analizza_azioni_avanzata():
+    """Versione che restituisce i risultati per l'integrazione"""
+    print(f"\n🔍 Analizzando {len(azioni)} azioni...")
+    print(f"⚙️  Configurazione: Sconto min {CONFIG['MIN_DISCOUNT']}% | Qualità min {CONFIG['MIN_QUALITY_SCORE']}/5")
+    print(f"⏰ Pause: ogni {CONFIG['PAUSE_EVERY']} azioni per {CONFIG['PAUSE_SECONDS']} secondi")
+    print(f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    print("-" * 50)
+
+    risultati = []
+    for i, azione in enumerate(azioni):
+        risultato = analizza_azione_avanzata(azione)
+        if risultato:
+            risultati.append(risultato)
+        
+        # 🔥 PAUSA PER EVITARE RATE LIMITING
+        if (i + 1) % CONFIG['PAUSE_EVERY'] == 0 and (i + 1) < len(azioni):
+            print(f"\n⏳ Pausa di {CONFIG['PAUSE_SECONDS']} secondi... ({i+1}/{len(azioni)} azioni completate)")
+            time.sleep(CONFIG['PAUSE_SECONDS'])
+    
+    # 🔥 IMPORTANTE: RESTITUISCE I RISULTATI per l'integrazione
+    return risultati
+
+# ==================== GESTIONE ERRORI AVANZATA ====================
+
+def safe_get(info, key, default=None):
+    """Recupera valori safely da dizionari nidificati"""
+    try:
+        # Se la key è semplice, restituisci direttamente
+        if '.' not in key:
+            return info.get(key, default)
+        
+        # Se la key è nidificata (es: 'balanceSheet.quarterly.debt')
+        keys = key.split('.')
+        value = info
+        for k in keys:
+            if isinstance(value, dict):
+                value = value.get(k, {})
+            else:
+                return default
+        return value if value != {} else default
+    except:
+        return default
+
+# ==================== CACHING PER PERFORMANCE ====================
+
+stock_cache = {}
+
+def get_cached_stock(ticker):
+    """Ottiene i dati del ticker dalla cache o da Yahoo Finance"""
+    if ticker not in stock_cache:
+        stock_cache[ticker] = yf.Ticker(ticker)
+    return stock_cache[ticker]
+
+# ==================== SISTEMA DI SCORING ====================
+
+def calculate_investment_score(analysis):
+    """Calcola un punteggio di investimento 0-100"""
+    # Punteggio Valore (max 50 punti)
+    value_score = min(analysis['sconto'] * 2, 50)  # 1% sconto = 2 punti
+    
+    # Punteggio Qualità (max 30 punti)
+    quality_score = 30 if analysis['qualita_ok'] else 0
+    
+    # Punteggio Rischio (max 20 punti)
+    risk_scores = {'Basso': 20, 'Medio': 15, 'Alto': 5}
+    risk_score = risk_scores.get(analysis['rischio'], 0)
+    
+    return value_score + quality_score + risk_score
+
+def calculate_quality_score(info):
+    """Calcola un punteggio di qualità più granulare 0-10"""
+    score = 0
+    
+    # 1. Redditività (ROE)
+    roe = safe_get(info, 'returnOnEquity', 0)
+    if roe > 0.15: score += 2
+    elif roe > 0.08: score += 1
+    
+    # 2. Margini di profitto
+    margins = safe_get(info, 'profitMargins', 0)
+    if margins > 0.15: score += 2
+    elif margins > 0.08: score += 1
+    
+    # 3. Gestione debito
+    debt_to_equity = safe_get(info, 'debtToEquity', 0)
+    if debt_to_equity < 0.5: score += 2
+    elif debt_to_equity < 1.0: score += 1
+    
+    # 4. Cash flow
+    operating_cf = safe_get(info, 'operatingCashflow', 0)
+    if operating_cf > 0: score += 2
+    
+    # 5. Liquidità
+    current_ratio = safe_get(info, 'currentRatio', 0)
+    if current_ratio > 1.5: score += 2
+    elif current_ratio > 1.0: score += 1
+    
+    return score
+
+def get_stelle_rating(score):
+    """Converte il punteggio in stelle, gestendo qualsiasi tipo di numero"""
+    try:
+        score_int = int(float(score))  # Converti prima in float poi in int
+        return "★" * (score_int // 20)
+    except:
+        return ""  # Se c'è errore, restituisci stringa vuota
+
+# ==================== FUNZIONI ESISTENTI MIGLIORATE ====================
+
+def check_quality_metrics(info):
+    """Controlla la qualità aziendale per evitare value traps - VERSIONE MIGLIORATA"""
+    try:
+        # Usa safe_get invece di .get() diretto
+        debito_lungo = safe_get(info, 'longTermDebt', 0)
+        cash_flow = safe_get(info, 'operatingCashflow', 0)
+        roe = safe_get(info, 'returnOnEquity', 0)
+        margini = safe_get(info, 'profitMargins', 0)
+        current_ratio = safe_get(info, 'currentRatio', 0)
+        
+        punteggio = 0
+        
+        # 1. Debito gestibile (debito < 3x cash flow)
+        if debito_lungo < cash_flow * 3 and debito_lungo > 0:
+            punteggio += 1
+        elif debito_lungo == 0:
+            punteggio += 1  # Nessun debito è buono
+            
+        # 2. Cash flow positivo
+        if cash_flow > 0:
+            punteggio += 1
+            
+        # 3. ROE decente (>8%)
+        if roe and roe > 0.08:
+            punteggio += 1
+            
+        # 4. Margini di profitto positivi
+        if margini and margini > 0.05:
+            punteggio += 1
+            
+        # 5. Liquidità sana (current ratio > 1)
+        if current_ratio and current_ratio > 1:
+            punteggio += 1
+            
+        return punteggio >= CONFIG['MIN_QUALITY_SCORE']  # Usa la configurazione
+        
+    except:
+        return False
+
+def analisi_rischio(info):
+    """Analizza il profilo di rischio dell'azienda - VERSIONE MIGLIORATA"""
+    punteggio_rischio = 0
+    
+    # Beta alto = più volatile
+    beta = safe_get(info, 'beta', 1)
+    if beta > 1.5: 
+        punteggio_rischio += 2
+    elif beta > 1.2:
+        punteggio_rischio += 1
+        
+    # Debito eccessivo
+    debt_to_equity = safe_get(info, 'debtToEquity', 0)
+    if debt_to_equity > 2:
+        punteggio_rischio += 2
+    elif debt_to_equity > 1:
+        punteggio_rischio += 1
+        
+    # Settore ad alto rischio
+    sector = str(safe_get(info, 'sector', '')).lower()
+    settori_rischiosi = ['technology', 'healthcare', 'energy']
+    if any(s in sector for s in settori_rischiosi):
+        punteggio_rischio += 1
+        
+    # Classifica rischio
+    if punteggio_rischio <= 1:
+        return "Basso"
+    elif punteggio_rischio <= 3:
+        return "Medio"
+    else:
+        return "Alto"
+
+def valuation_settoriale(info, eps, book_val):
+    """Adatta la valuation in base al settore - VERSIONE MIGLIORATA"""
+    sector = str(safe_get(info, 'sector', '')).lower()
+    
+    # Per tech/growth: considera la crescita
+    if any(keyword in sector for keyword in ['technology', 'healthcare']):
+        growth_rate = safe_get(info, 'earningsGrowth', 0) or 0
+        # Limita il premium di crescita per sicurezza
+        growth_adjustment = 1 + min(growth_rate, 0.15)  
+        valore_base = (22.5 * eps * book_val) ** 0.5
+        return valore_base * growth_adjustment
+    
+    # Per finanziarie: focus su book value
+    elif 'financial' in sector:
+        # Usa P/B ratio più conservativo per le banche
+        return book_val * 1.2
+    
+    # Default: formula Graham tradizionale
+    else:
+        return (22.5 * eps * book_val) ** 0.5
+
+# ==================== FUNZIONE PRINCIPALE MIGLIORATA ====================
+
+def analizza_azione_avanzata(ticker):
+    try:
+        # 🔥 USA CACHING invece di yf.Ticker() diretto
+        stock = get_cached_stock(ticker)
+        info = stock.info
+        
+        print(f"\n📊 {ticker}: {safe_get(info, 'longName', 'N/A')[:30]}...")
+        print(f"   🏭 Settore: {safe_get(info, 'sector', 'N/A')}")
+        print(f"   💰 Prezzo: ${safe_get(info, 'currentPrice', 'N/A')}")
+        print(f"   📈 P/E: {safe_get(info, 'trailingPE', 'N/A')}")
+        
+        # CALCOLO VALORE INTRINSECO MIGLIORATO
+        # 🔥 USA safe_get invece di .get()
+        eps = safe_get(info, 'trailingEps')
+        book_val = safe_get(info, 'bookValue')
+        prezzo_attuale = safe_get(info, 'currentPrice')
+        
+        if eps and book_val and eps > 0 and prezzo_attuale:
+            # Valuation settoriale invece di formula fissa
+            valore_intrinseco = valuation_settoriale(info, eps, book_val)
+            sconto = ((valore_intrinseco - prezzo_attuale) / valore_intrinseco) * 100
+            
+            # Controllo qualità
+            qualita_ok = check_quality_metrics(info)
+            
+            # Analisi rischio
+            rischio = analisi_rischio(info)
+            
+            # 🔥 NUOVO: Calcolo punteggio investimento
+            investment_score = calculate_investment_score({
+                'sconto': sconto,
+                'qualita_ok': qualita_ok,
+                'rischio': rischio
+            })
+            
+            # 🔥 NUOVO: Calcolo punteggio qualità dettagliato
+            quality_score_detailed = calculate_quality_score(info)
+            
+            print(f"   🎯 Valore Intrinseco: ${valore_intrinseco:.2f}")
+            print(f"   📊 Punteggio Investimento: {investment_score:.0f}/100")
+            print(f"   🏅 Qualità Dettagliata: {quality_score_detailed}/10")
+            
+            # 🔥 NUOVO: Output più informativo con punteggio
+            if sconto > 0 and qualita_ok:
+                if investment_score >= 80:
+                    print(f"   🔥 SCONTO: {sconto:.1f}% | Punteggio: {investment_score:.0f} | QUALITÀ ECCELLENTE! 🚀")
+                else:
+                    print(f"   🔥 SCONTO: {sconto:.1f}% | Punteggio: {investment_score:.0f} | Qualità: ✅ | Rischio: {rischio}")
+            elif sconto > 0 and not qualita_ok:
+                print(f"   ⚠️  SCONTO: {sconto:.1f}% | Punteggio: {investment_score:.0f} | Qualità: ❌ | Value Trap!")
+            else:
+                print(f"   ⚠️  SOVRAPREZZO: {abs(sconto):.1f}% | Punteggio: {investment_score:.0f}")
+                
+            return {
+                'ticker': ticker,
+                'nome': safe_get(info, 'longName', ''),
+                'settore': safe_get(info, 'sector', ''),
+                'prezzo': prezzo_attuale,
+                'valore_intrinseco': valore_intrinseco,
+                'sconto': sconto,
+                'qualita_ok': qualita_ok,
+                'rischio': rischio,
+                'investment_score': investment_score,
+                'quality_score_detailed': quality_score_detailed,
+                'pe_ratio': safe_get(info, 'trailingPE'),
+                'roe': safe_get(info, 'returnOnEquity'),
+                'debito_equity': safe_get(info, 'debtToEquity')
+            }
+        else:
+            print(f"   ❌ Dati insufficienti per calcolo")
+            return None
+            
+    except Exception as e:
+        print(f"   ❌ Errore con {ticker}: {str(e)[:50]}...")
+        return None
+
+# ==================== LISTA AZIONI COMPLETA (160+) ====================
+
+azioni = [
+    # 🔷 TECNOLOGIA (25)
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'AVGO', 'ADBE', 'CRM',
+    'CSCO', 'INTC', 'ORCL', 'IBM', 'QCOM', 'TXN', 'AMD', 'NOW', 'UBER', 'SHOP',
+    'NET', 'SNOW', 'PANW', 'CRWD', 'MSI',
+    
+    # 🏦 FINANZIARIE (20)
+    'JPM', 'BAC', 'WFC', 'GS', 'MS', 'SCHW', 'BLK', 'C', 'AXP', 'V',
+    'MA', 'PYPL', 'SQ', 'COF', 'DFS', 'RY', 'TD', 'BX', 'KKR', 'SPGI',
+    
+    # 🏥 HEALTHCARE (20)
+    'JNJ', 'UNH', 'LLY', 'PFE', 'ABBV', 'TMO', 'MRK', 'DHR', 'AMGN', 'GILD',
+    'BMY', 'VRTX', 'REGN', 'ISRG', 'SYK', 'BDX', 'ZTS', 'CI', 'HUM', 'EW',
+    
+    # 🏠 CONSUMO CICLICO (15)
+    'HD', 'MCD', 'SBUX', 'NKE', 'LOW', 'TSCO', 'F', 'GM', 'MAR', 'HLT',
+    'BKNG', 'NCLH', 'RCL', 'CCL', 'DHI',
+    
+    # 🛒 CONSUMO DIFENSIVO (15)
+    'WMT', 'PG', 'KO', 'PEP', 'COST', 'PM', 'MO', 'MDLZ', 'CL', 'EL',
+    'KMB', 'SYY', 'KR', 'TGT', 'DG',
+    
+    # ⚡ ENERGY & UTILITIES (15)
+    'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'PSX', 'VLO', 'MPC', 'OXY', 'KMI',
+    'NEE', 'DUK', 'SO', 'D', 'AEP',
+    
+    # 🏭 INDUSTRIALI (15)
+    'RTX', 'BA', 'LMT', 'GD', 'NOC', 'CAT', 'DE', 'HON', 'GE', 'UPS',
+    'FDX', 'EMR', 'ITW', 'WM', 'RSG',
+    
+    # 🏢 MATERIALI & REAL ESTATE (15)
+    'LIN', 'APD', 'FCX', 'NEM', 'GOLD', 'VALE', 'BHP', 'RIO', 'PLD', 'AMT',
+    'CCI', 'EQIX', 'PSA', 'O', 'SPG',
+    
+    # 📱 TELECOM & MEDIA (15)
+    'T', 'VZ', 'CMCSA', 'DIS', 'NFLX', 'CHTR', 'TMUS', 'EA', 'ATVI', 'TTWO',
+    'LYV', 'LVS', 'WYNN', 'MGM', 'ROKU',
+    
+    # 🌍 INTERNAZIONALI (15)
+    'ASML', 'NSRGY', 'SAP', 'UL', 'BUD', 'AZN', 'GSK', 'SNY', 'SAN', 'BBVA',
+    'ING', 'HSBC', 'TM', 'HMC', 'SONY'
+]
+
+# ==================== CODICE ESECUZIONE DIRECTTA ====================
+
+if __name__ == "__main__":
+    # Quando eseguito direttamente, mostra output completo
+    risultati = analizza_azioni_avanzata()
+    
+    # 🔥 NUOVO: MIGLIORI OPPORTUNITÀ CON PUNTEGGIO
+    if risultati:
+        print(f"\n🏆 MIGLIORI OPPORTUNITÀ (ordinate per punteggio):")
+        print("-" * 50)
+        
+        # Filtra solo quelle con sconto E qualità OK
+        opportunita_reali = [r for r in risultati if r['sconto'] > CONFIG['MIN_DISCOUNT'] and r['qualita_ok']]
+        
+        if opportunita_reali:
+            # 🔥 ORDINA PER PUNTEGGIO invece che solo per sconto
+            risultati_ordinati = sorted(opportunita_reali, key=lambda x: x['investment_score'], reverse=True)
+            
+            for i, risultato in enumerate(risultati_ordinati[:15], 1):  # Top 15 invece di 10
+                emoji_rischio = "🟢" if risultato['rischio'] == "Basso" else "🟡" if risultato['rischio'] == "Medio" else "🔴"
+                stelle = get_stelle_rating(risultato['investment_score'])
+                
+                print(f"{i}. {risultato['ticker']}: {risultato['sconto']:.1f}% sconto")
+                print(f"   💰 Prezzo: ${risultato['prezzo']:.2f} | Valore: ${risultato['valore_intrinseco']:.2f}")
+                print(f"   📊 Punteggio: {risultato['investment_score']:.0f}/100 {stelle}")
+                print(f"   ⚖️  Rischio: {risultato['rischio']} {emoji_rischio} | Qualità: {risultato['quality_score_detailed']}/10")
+        else:
+            print("🤔 Nessuna opportunità di qualità trovata oggi")
+
+    # VALUE TRAPS (sconti ma bassa qualità)
+    value_traps = [r for r in risultati if r['sconto'] > 0 and not r['qualita_ok']]
+    if value_traps:
+        print(f"\n🚨 VALUE TRAPS (Sconti ma bassa qualità):")
+        print("-" * 40)
+        for trap in value_traps[:8]:  # Mostra più value traps
+            print(f"⚠️  {trap['ticker']}: {trap['sconto']:.1f}% sconto | Qualità: {trap['quality_score_detailed']}/10")
+
+    print("\n" + "=" * 50)
+    print("✅ ANALISI COMPLETATA!")
+    print(f"📊 Azioni analizzate: {len(azioni)}")
+    print(f"🎯 Opportunità di qualità: {len(opportunita_reali)}")
+    print(f"🚨 Value traps identificati: {len(value_traps)}")
+
+    # 🔥 NUOVO: SALVATAGGIO MIGLIORATO CON PUNTEGGI
+    if risultati:
+        df = pd.DataFrame(risultati)
+        
+        # Aggiungi raccomandazione basata su punteggio
+        def raccomandazione(row):
+            if row['investment_score'] >= 80:
+                return "FORTE ACQUISTO 🚀"
+            elif row['investment_score'] >= 60:
+                return "ACQUISTA ✅"
+            elif row['sconto'] > 0 and not row['qualita_ok']:
+                return "INVESTIGA 🔍"
+            else:
+                return "EVITA ❌"
+        
+        df['raccomandazione'] = df.apply(raccomandazione, axis=1)
+        
+        # Ordina per punteggio prima di salvare
+        df = df.sort_values('investment_score', ascending=False)
+        
+        # Salva
+        data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
+        nome_file = f"analisi_avanzata_{data_oggi}.csv"
+        df.to_csv(nome_file, index=False)
+        
+        print(f"\n💾 Risultati salvati in '{nome_file}'")
+        
+        # 🔥 OUTPUT PIÙ PULITO senza "Name: count, dtype: int64"
+        print(f"📊 Riepilogo raccomandazioni:")
+        conteggi = df['raccomandazione'].value_counts()
+        for raccomandazione, count in conteggi.items():
+            print(f"   {raccomandazione}: {count} azioni")
+
+    print("\n" + "=" * 50)
+=== FINE: src\mio_stock_finder.py ===
