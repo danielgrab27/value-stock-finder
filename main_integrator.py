@@ -10,6 +10,7 @@ sys.path.append('reporting')
 from reporting import ReportGenerator
 import json
 from datetime import datetime
+from src.alert_system import get_alert_system
 
 def main():
     print("🎯 VALUE STOCK FINDER - MAIN INTEGRATOR")
@@ -40,14 +41,19 @@ def main():
         print("❌ Scelta non valida")
 
 def esegui_screening():
-    """Esegue lo screening completo"""
+    """Esegue lo screening completo con sistema di alert"""
     try:
-        # Aggiungi src al path per importare
         sys.path.append('src')
         from mio_stock_finder import analizza_azioni_avanzata
         
         print("\n🚀 AVVIO SCREENING COMPLETO...")
         risultati = analizza_azioni_avanzata()
+        
+        # 🔥 NUOVO: SISTEMA DI ALERT
+        print("\n🔍 ANALISI OPPORTUNITÀ ECCEZIONALI...")
+        alert_system = get_alert_system()
+        analysis_results = alert_system.analyze_opportunities(risultati)
+        alert_system.generate_alerts(analysis_results)
         
         # Salva in outputs/screens/
         data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
@@ -58,7 +64,7 @@ def esegui_screening():
         
         print(f"💾 Risultati salvati in: {filename}")
         
-        # NUOVO: GENERA REPORT SCREENING
+        # Genera report screening
         print("📊 Generazione report screening...")
         report_gen = ReportGenerator()
         report_paths = report_gen.generate_comprehensive_report(risultati, [])
@@ -71,6 +77,7 @@ def esegui_screening():
     except Exception as e:
         print(f"❌ Errore durante lo screening: {e}")
         return None
+        
 def esegui_backtesting():
     """Esegue backtesting sulle migliori opportunità - VERSIONE INTEGRATA"""
     try:
@@ -98,6 +105,10 @@ def esegui_backtesting():
             if not risultati_screening:
                 print("❌ Nessun risultato dallo screening")
                 return
+
+            # ANALISI ALERT PRIMA DEL BACKTESTING
+            alert_system = get_alert_system()
+            analysis_results = alert_system.analyze_opportunities(risultati_screening)
             
             # Filtra solo le opportunità di qualità (come fa mio_stock_finder.py)
             min_discount = 5.0  # Stesso valore di CONFIG
@@ -111,6 +122,9 @@ def esegui_backtesting():
                 return
                 
             print(f"🎯 Trovate {len(opportunita_reali)} opportunità di qualità")
+
+            # MOSTRA ALERT PRIMA DEL BACKTESTING
+            alert_system.generate_alerts(analysis_results)
             
             # Esegui backtesting sulle opportunità reali
             risultati_backtest = backtest_opportunita(opportunita_reali, anni=3)
@@ -148,7 +162,7 @@ def test_struttura():
     """Testa la struttura del repository"""
     print("\n🧪 TEST STRUTTURA REPOSITORY")
     
-    cartelle_necessarie = ['src', 'outputs', 'data', 'docs', 'outputs/screens', 'outputs/backtests', 'outputs/reports', 'outputs/archive']
+    cartelle_necessarie = ['src', 'outputs', 'data', 'docs', 'outputs/screens', 'outputs/backtests', 'outputs/reports', 'outputs/archive', 'outputs/alerts']
     
     for cartella in cartelle_necessarie:
         if os.path.exists(cartella):
@@ -157,7 +171,8 @@ def test_struttura():
             print(f"❌ {cartella}/ (mancante)")
     
     print("\n📁 File principali:")
-    file_necessari = ['src/mio_stock_finder.py', 'main_integrator.py']
+    file_necessari = ['src/mio_stock_finder.py','src/backtester.py', 
+        'src/alert_system.py', 'main_integrator.py']
     
     for file in file_necessari:
         if os.path.exists(file):
