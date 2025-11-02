@@ -1,1 +1,19 @@
-Continua lo sviluppo di value-stock-finder. Vedi https://github.com/danielgrab27/value-stock-finder e sviluppo.md per lo stato attuale
+[SCANSIONE COMPLETA - incolla qui tutto repository_scan.txt]
+
+[TASK]
+Voglio sviluppare il punto: "Aggiungere alert per opportunità eccezionali"
+Obiettivo: Implementare sistema di notifiche per opportunità di investimento eccezionali
+
+[REQUISITI]
+- Rilevamento automatico opportunità con score >90/100
+- Sistema di notifiche in-app (console con highlight)
+- Soglie configurabili per "opportunità eccezionale"
+- Segnalazione value traps pericolosi
+- Salvataggio storico alert in JSON
+- Possibilità future di integrazione email/telegram
+
+[CONSIDERAZIONI TECNICHE]
+- Utilizzare i punteggi investment_score già calcolati
+- Sfruttare metriche esistenti: sconto, qualità, rischio
+- Integrare con sistema reporting per highlight speciali
+- Mantenere backward compatibility
