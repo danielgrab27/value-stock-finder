@@ -1,0 +1,12 @@
+{
+    "alert_system": {
+        "EXCEPTIONAL_OPPORTUNITY_SCORE": 90,
+        "HIGH_RISK_VALUE_TRAP_SCORE": 30,
+        "MIN_DISCOUNT_EXCEPTIONAL": 25.0,
+        "MAX_RISK_EXCEPTIONAL": "Medio",
+        "ENABLE_HISTORICAL_ALERTS": true,
+        "ENABLE_EMAIL_ALERTS": false,
+        "ENABLE_TELEGRAM_ALERTS": false,
+        "MIN_QUALITY_SCORE_EXCEPTIONAL": 7
+    }
+}
