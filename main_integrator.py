@@ -10,6 +10,7 @@ sys.path.append('reporting')
 from reporting import ReportGenerator
 import json
 from datetime import datetime
+from src.alert_system import get_alert_system
 
 def main():
     print("🎯 VALUE STOCK FINDER - MAIN INTEGRATOR")
@@ -40,14 +41,19 @@ def main():
         print("❌ Scelta non valida")
 
 def esegui_screening():
-    """Esegue lo screening completo"""
+    """Esegue lo screening completo con sistema di alert"""
     try:
-        # Aggiungi src al path per importare
         sys.path.append('src')
         from mio_stock_finder import analizza_azioni_avanzata
         
         print("\n🚀 AVVIO SCREENING COMPLETO...")
         risultati = analizza_azioni_avanzata()
+        
+        # 🔥 NUOVO: SISTEMA DI ALERT
+        print("\n🔍 ANALISI OPPORTUNITÀ ECCEZIONALI...")
+        alert_system = get_alert_system()
+        analysis_results = alert_system.analyze_opportunities(risultati)
+        alert_system.generate_alerts(analysis_results)
         
         # Salva in outputs/screens/
         data_oggi = datetime.now().strftime("%Y%m%d_%H%M")
@@ -58,7 +64,7 @@ def esegui_screening():
         
         print(f"💾 Risultati salvati in: {filename}")
         
-        # NUOVO: GENERA REPORT SCREENING
+        # Genera report screening
         print("📊 Generazione report screening...")
         report_gen = ReportGenerator()
         report_paths = report_gen.generate_comprehensive_report(risultati, [])
@@ -71,6 +77,7 @@ def esegui_screening():
     except Exception as e:
         print(f"❌ Errore durante lo screening: {e}")
         return None
+        
 def esegui_backtesting():
     """Esegue backtesting sulle migliori opportunità - VERSIONE INTEGRATA"""
     try:
