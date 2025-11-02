@@ -6,6 +6,8 @@ Data: 2024-01-15
 
 import os
 import sys
+sys.path.append('reporting')  
+from reporting import ReportGenerator
 import json
 from datetime import datetime
 
@@ -56,9 +58,19 @@ def esegui_screening():
         
         print(f"💾 Risultati salvati in: {filename}")
         
+        # NUOVO: GENERA REPORT SCREENING
+        print("📊 Generazione report screening...")
+        report_gen = ReportGenerator()
+        report_paths = report_gen.generate_comprehensive_report(risultati, [])
+        print(f"📄 Report generati:")
+        print(f"  - Dashboard: {report_paths['html_dashboard']}")
+        print(f"  - PDF: {report_paths['pdf_report']}")
+        
+        return risultati
+        
     except Exception as e:
         print(f"❌ Errore durante lo screening: {e}")
-
+        return None
 def esegui_backtesting():
     """Esegue backtesting sulle migliori opportunità - VERSIONE INTEGRATA"""
     try:
@@ -105,18 +117,20 @@ def esegui_backtesting():
             
             if risultati_backtest:
                 salva_risultati_backtest(risultati_backtest)
-                print("\n📈 ANALISI COMPARATIVA vs S&P500:")
-                for risultato in risultati_backtest[:6]:  # Top 6 (incluso S&P500)
-                    if risultato['ticker'] == 'S&P500':
-                        print(f"   📊 {risultato['ticker']}: {risultato['rendimento_totale_perc']:>6.1f}% (Benchmark)")
-                    else:
-                        rendimento = risultato['rendimento_totale_perc']
-                        sconto = risultato['sconto']
-                        alpha = risultato.get('alpha_perc', 0)  # Usa .get() per sicurezza
-                        performance = "🚀" if risultato.get('battuto_sp500', False) else "📉"
-                        
-                        print(f"   {performance} {risultato['ticker']}: Sconto {sconto:>5.1f}% | Rend: {rendimento:>5.1f}% | Alpha: {alpha:>5.1f}% | Score: {risultato['investment_score']:.0f}")
-            
+    
+                # NUOVO: GENERA REPORT COMPLETO
+                print("📊 Generazione report completo...")
+                report_gen = ReportGenerator()
+                report_paths = report_gen.generate_comprehensive_report(
+                    risultati_screening, 
+                    risultati_backtest
+                )
+    
+                print(f"📄 Report generati:")
+                print(f"  - Dashboard: {report_paths['html_dashboard']}")
+                print(f"  - PDF: {report_paths['pdf_report']}")
+    
+                return risultati_backtest
         elif scelta == "3":
             print("📁 Caricamento screening precedente...")
             # Qui puoi aggiungere il caricamento da file JSON salvato
