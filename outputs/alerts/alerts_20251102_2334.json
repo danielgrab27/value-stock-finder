@@ -1,0 +1,23 @@
+{
+  "timestamp": "2025-11-02T23:34:21.845972",
+  "exceptional_count": 1,
+  "trap_count": 1,
+  "quality_count": 1,
+  "exceptional_opportunities": [
+    {
+      "ticker": "TEST1",
+      "score": 95,
+      "discount": 30.5,
+      "price": 50.0,
+      "risk": "Medio"
+    }
+  ],
+  "high_risk_traps": [
+    {
+      "ticker": "TEST2",
+      "score": 25,
+      "discount": 18.0,
+      "risk": "Alto"
+    }
+  ]
+}
