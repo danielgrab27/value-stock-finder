@@ -166,7 +166,7 @@ class HTMLReporter:
                 )
     
     def _create_complete_html(self, fig, opportunita_qualita, backtest_results):
-    """Crea HTML completo con tabelle e grafici - VERSIONE CON ALERT"""
+        """Crea HTML completo con tabelle e grafici - VERSIONE CON ALERT"""
     
         # 🔥 NUOVO: RILEVA OPPORTUNITÀ ECCEZIONALI
         exceptional_count = 0
@@ -266,7 +266,7 @@ class HTMLReporter:
         return html_template
     
     def _create_opportunities_table(self, opportunita_qualita):
-    """Crea tabella HTML delle migliori opportunità - VERSIONE CON ALERT"""
+        """Crea tabella HTML delle migliori opportunità - VERSIONE CON ALERT"""
         if not opportunita_qualita:
             return "<p>Nessuna opportunità di qualità trovata.</p>"
     
@@ -294,7 +294,7 @@ class HTMLReporter:
             risk_class = opp.get('rischio', '')
             risk_emoji = "🟢" if risk_class == "Basso" else "🟡" if risk_class == "Medio" else "🔴"
         
-        # 🔥 NUOVO: DETERMINA TIPO DI ALERT
+            # 🔥 NUOVO: DETERMINA TIPO DI ALERT
             alert_emoji = ""
             row_class = ""
         
@@ -323,7 +323,7 @@ class HTMLReporter:
     
         table_html += "</tbody></table>"
     
-    # 🔥 NUOVO: LEGENDA ALERT
+        # 🔥 NUOVO: LEGENDA ALERT
         table_html += """
         <div style="margin-top: 10px; font-size: 12px; color: #666;">
             <strong>Legenda Alert:</strong> 
