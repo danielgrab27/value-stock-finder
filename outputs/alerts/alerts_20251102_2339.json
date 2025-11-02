@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-11-02T23:39:13.355501",
+  "exceptional_count": 5,
+  "trap_count": 0,
+  "quality_count": 8,
+  "exceptional_opportunities": [
+    {
+      "ticker": "VALE",
+      "score": 95,
+      "discount": 68.5875455190871,
+      "price": 12.09,
+      "risk": "Medio"
+    },
+    {
+      "ticker": "CMCSA",
+      "score": 95,
+      "discount": 53.37790530988502,
+      "price": 27.835,
+      "risk": "Medio"
+    },
+    {
+      "ticker": "TM",
+      "score": 95,
+      "discount": 82.26266023525424,
+      "price": 204.19,
+      "risk": "Medio"
+    },
+    {
+      "ticker": "HMC",
+      "score": 95,
+      "discount": 92.88706686787508,
+      "price": 30.5,
+      "risk": "Medio"
+    },
+    {
+      "ticker": "SONY",
+      "score": 95,
+      "discount": 86.53078727514458,
+      "price": 27.89,
+      "risk": "Medio"
+    }
+  ],
+  "high_risk_traps": []
+}
