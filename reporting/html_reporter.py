@@ -2,6 +2,7 @@
 🎨 HTML REPORTER - Dashboard interattiva per Value Stock Finder
 """
 
+import sys
 import os
 import json
 import pandas as pd
