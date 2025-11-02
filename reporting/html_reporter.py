@@ -165,94 +165,170 @@ class HTMLReporter:
                 )
     
     def _create_complete_html(self, fig, opportunita_qualita, backtest_results):
-        """Crea HTML completo con tabelle e grafici"""
-        # Converti figura Plotly in HTML
-        plotly_html = pyo.plot(fig, include_plotlyjs=True, output_type='div')
+    """Crea HTML completo con tabelle e grafici - VERSIONE CON ALERT"""
+    
+    # 🔥 NUOVO: RILEVA OPPORTUNITÀ ECCEZIONALI
+    exceptional_count = 0
+    trap_count = 0
+    
+    try:
+        # Importa il sistema di alert
+        sys.path.append('src')
+        from alert_system import AlertSystem
         
-        # Crea tabella opportunità
-        opportunities_table = self._create_opportunities_table(opportunita_qualita)
-        
-        # Crea HTML completo
-        html_template = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>🎯 Value Stock Finder - Dashboard</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                         color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }}
-                .summary {{ background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
-                .table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-                .table th, .table td {{ padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }}
-                .table th {{ background-color: #f2f2f2; }}
-                .positive {{ color: green; font-weight: bold; }}
-                .negative {{ color: red; font-weight: bold; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🎯 Value Stock Finder - Analytical Dashboard</h1>
-                <p>Generato il: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
-            </div>
-            
-            <div class="summary">
-                <h3>📊 Executive Summary</h3>
-                <p><strong>Opportunità di Qualità Trovate:</strong> {len(opportunita_qualita)}</p>
-                <p><strong>Azioni che battono S&P500:</strong> {len([r for r in backtest_results if r.get('battuto_sp500', False)]) if backtest_results else 0}</p>
-                <p><strong>Miglior Opportunità:</strong> {max([r.get('investment_score', 0) for r in opportunita_qualita]) if opportunita_qualita else 0}/100</p>
-            </div>
-            
-            {plotly_html}
-            
-            <h3>🎯 Top Value Opportunities</h3>
-            {opportunities_table}
-        </body>
-        </html>
+        alert_system = AlertSystem()
+        analysis_results = alert_system.analyze_opportunities(opportunita_qualita)
+        exceptional_count = len(analysis_results['exceptional'])
+        trap_count = len(analysis_results['high_risk_traps'])
+    except Exception as e:
+        print(f"⚠️  Sistema alert non disponibile: {e}")
+        # Fallback: calcola manualmente
+        for opp in opportunita_qualita:
+            if opp.get('investment_score', 0) >= 90 and opp.get('sconto', 0) >= 25:
+                exceptional_count += 1
+            elif (opp.get('sconto', 0) > 15 and 
+                  not opp.get('qualita_ok', False) and 
+                  opp.get('rischio', '') == 'Alto'):
+                trap_count += 1
+    
+    # Converti figura Plotly in HTML
+    plotly_html = pyo.plot(fig, include_plotlyjs=True, output_type='div')
+    
+    # Crea tabella opportunità
+    opportunities_table = self._create_opportunities_table(opportunita_qualita)
+    
+    # 🔥 NUOVO: SEZIONE ALERT
+    alert_section = ""
+    if exceptional_count > 0:
+        alert_section = f"""
+        <div style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
+                    color: white; padding: 15px; border-radius: 10px; margin: 20px 0;">
+            <h3>🚨 ATTENZIONE: {exceptional_count} OPPORTUNITÀ ECCEZIONALI TROVATE!</h3>
+            <p>Rilevate azioni con score >90 e sconto >25%. Considera priorità di investimento.</p>
+        </div>
         """
+    
+    if trap_count > 0:
+        alert_section += f"""
+        <div style="background: linear-gradient(135deg, #FF6B6B 0%, #EE5A24 100%); 
+                    color: white; padding: 15px; border-radius: 10px; margin: 20px 0;">
+            <h3>⚠️  ATTENZIONE: {trap_count} VALUE TRAPS PERICOLOSI IDENTIFICATI!</h3>
+            <p>Azioni con alto sconto ma bassa qualità e alto rischio. Approccio con cautela.</p>
+        </div>
+        """
+    
+    # Crea HTML completo
+    html_template = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>🎯 Value Stock Finder - Dashboard</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                     color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }}
+            .summary {{ background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+            .table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+            .table th, .table td {{ padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }}
+            .table th {{ background-color: #f2f2f2; }}
+            .positive {{ color: green; font-weight: bold; }}
+            .negative {{ color: red; font-weight: bold; }}
+            .exceptional {{ background-color: #FFF9C4 !important; border-left: 4px solid #FFD700; }}
+            .trap {{ background-color: #FFEBEE !important; border-left: 4px solid #FF5252; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🎯 Value Stock Finder - Analytical Dashboard</h1>
+            <p>Generato il: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
+        </div>
         
-        return html_template
+        {alert_section}
+        
+        <div class="summary">
+            <h3>📊 Executive Summary</h3>
+            <p><strong>Opportunità di Qualità Trovate:</strong> {len(opportunita_qualita)}</p>
+            <p><strong>Opportunità Eccezionali:</strong> <span class="positive">{exceptional_count}</span></p>
+            <p><strong>Value Traps Pericolosi:</strong> <span class="negative">{trap_count}</span></p>
+            <p><strong>Azioni che battono S&P500:</strong> {len([r for r in backtest_results if r.get('battuto_sp500', False)]) if backtest_results else 0}</p>
+            <p><strong>Miglior Opportunità:</strong> {max([r.get('investment_score', 0) for r in opportunita_qualita]) if opportunita_qualita else 0}/100</p>
+        </div>
+        
+        {plotly_html}
+        
+        <h3>🎯 Top Value Opportunities</h3>
+        {opportunities_table}
+    </body>
+    </html>
+    """
+    
+    return html_template
     
     def _create_opportunities_table(self, opportunita_qualita):
-        """Crea tabella HTML delle migliori opportunità"""
-        if not opportunita_qualita:
-            return "<p>Nessuna opportunità di qualità trovata.</p>"
+    """Crea tabella HTML delle migliori opportunità - VERSIONE CON ALERT"""
+    if not opportunita_qualita:
+        return "<p>Nessuna opportunità di qualità trovata.</p>"
+    
+    top_10 = sorted(opportunita_qualita, key=lambda x: x.get('investment_score', 0), reverse=True)[:10]
+    
+    table_html = """
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Ticker</th>
+                <th>Company</th>
+                <th>Sector</th>
+                <th>Price</th>
+                <th>Discount</th>
+                <th>Score</th>
+                <th>Risk</th>
+                <th>Quality</th>
+                <th>Alert</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+    
+    for opp in top_10:
+        risk_class = opp.get('rischio', '')
+        risk_emoji = "🟢" if risk_class == "Basso" else "🟡" if risk_class == "Medio" else "🔴"
         
-        top_10 = sorted(opportunita_qualita, key=lambda x: x.get('investment_score', 0), reverse=True)[:10]
+        # 🔥 NUOVO: DETERMINA TIPO DI ALERT
+        alert_emoji = ""
+        row_class = ""
         
-        table_html = """
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Ticker</th>
-                    <th>Company</th>
-                    <th>Sector</th>
-                    <th>Price</th>
-                    <th>Discount</th>
-                    <th>Score</th>
-                    <th>Risk</th>
-                    <th>Quality</th>
-                </tr>
-            </thead>
-            <tbody>
+        if opp.get('investment_score', 0) >= 90 and opp.get('sconto', 0) >= 25:
+            alert_emoji = "🔥"
+            row_class = "exceptional"
+        elif (opp.get('sconto', 0) > 15 and 
+              not opp.get('qualita_ok', False) and 
+              risk_class == "Alto"):
+            alert_emoji = "⚠️"
+            row_class = "trap"
+        
+        table_html += f"""
+            <tr class="{row_class}">
+                <td><strong>{opp['ticker']}</strong></td>
+                <td>{opp.get('nome', '')[:20]}...</td>
+                <td>{opp.get('settore', '')}</td>
+                <td>${opp.get('prezzo', 0):.2f}</td>
+                <td class="positive">{opp.get('sconto', 0):.1f}%</td>
+                <td><strong>{opp.get('investment_score', 0):.0f}/100</strong></td>
+                <td>{risk_emoji} {risk_class}</td>
+                <td>{opp.get('quality_score_detailed', 0)}/10</td>
+                <td>{alert_emoji}</td>
+            </tr>
         """
-        
-        for opp in top_10:
-            risk_class = opp.get('rischio', '')
-            risk_emoji = "🟢" if risk_class == "Basso" else "🟡" if risk_class == "Medio" else "🔴"
-            
-            table_html += f"""
-                <tr>
-                    <td><strong>{opp['ticker']}</strong></td>
-                    <td>{opp.get('nome', '')[:20]}...</td>
-                    <td>{opp.get('settore', '')}</td>
-                    <td>${opp.get('prezzo', 0):.2f}</td>
-                    <td class="positive">{opp.get('sconto', 0):.1f}%</td>
-                    <td><strong>{opp.get('investment_score', 0):.0f}/100</strong></td>
-                    <td>{risk_emoji} {risk_class}</td>
-                    <td>{opp.get('quality_score_detailed', 0)}/10</td>
-                </tr>
-            """
-        
-        table_html += "</tbody></table>"
-        return table_html
+    
+    table_html += "</tbody></table>"
+    
+    # 🔥 NUOVO: LEGENDA ALERT
+    table_html += """
+    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+        <strong>Legenda Alert:</strong> 
+        <span style="margin-right: 15px;">🔥 Opportunità Eccezionale (Score ≥90, Sconto ≥25%)</span> 
+        <span>⚠️ Value Trap Potenziale (Sconto alto, Qualità bassa, Rischio alto)</span>
+    </div>
+    """
+    
+    return table_html
