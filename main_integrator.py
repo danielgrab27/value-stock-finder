@@ -162,7 +162,7 @@ def test_struttura():
     """Testa la struttura del repository"""
     print("\n🧪 TEST STRUTTURA REPOSITORY")
     
-    cartelle_necessarie = ['src', 'outputs', 'data', 'docs', 'outputs/screens', 'outputs/backtests', 'outputs/reports', 'outputs/archive']
+    cartelle_necessarie = ['src', 'outputs', 'data', 'docs', 'outputs/screens', 'outputs/backtests', 'outputs/reports', 'outputs/archive', 'outputs/alerts']
     
     for cartella in cartelle_necessarie:
         if os.path.exists(cartella):
@@ -171,7 +171,8 @@ def test_struttura():
             print(f"❌ {cartella}/ (mancante)")
     
     print("\n📁 File principali:")
-    file_necessari = ['src/mio_stock_finder.py', 'main_integrator.py']
+    file_necessari = ['src/mio_stock_finder.py','src/backtester.py', 
+        'src/alert_system.py', 'main_integrator.py']
     
     for file in file_necessari:
         if os.path.exists(file):
