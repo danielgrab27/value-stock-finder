@@ -105,6 +105,10 @@ def esegui_backtesting():
             if not risultati_screening:
                 print("❌ Nessun risultato dallo screening")
                 return
+
+            # ANALISI ALERT PRIMA DEL BACKTESTING
+            alert_system = get_alert_system()
+            analysis_results = alert_system.analyze_opportunities(risultati_screening)
             
             # Filtra solo le opportunità di qualità (come fa mio_stock_finder.py)
             min_discount = 5.0  # Stesso valore di CONFIG
@@ -118,6 +122,9 @@ def esegui_backtesting():
                 return
                 
             print(f"🎯 Trovate {len(opportunita_reali)} opportunità di qualità")
+
+            # MOSTRA ALERT PRIMA DEL BACKTESTING
+            alert_system.generate_alerts(analysis_results)
             
             # Esegui backtesting sulle opportunità reali
             risultati_backtest = backtest_opportunita(opportunita_reali, anni=3)
