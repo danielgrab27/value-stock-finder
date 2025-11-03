@@ -1,19 +1,22 @@
 [SCANSIONE COMPLETA - incolla qui tutto repository_scan.txt]
 
 [TASK]
-Voglio sviluppare il punto: "Aggiungere alert per opportunità eccezionali"
-Obiettivo: Implementare sistema di notifiche per opportunità di investimento eccezionali
+Voglio sviluppare il punto: "Implementare dashboard web"
+Obiettivo: Creare dashboard web interattiva per visualizzazione risultati analisi
 
 [REQUISITI]
-- Rilevamento automatico opportunità con score >90/100
-- Sistema di notifiche in-app (console con highlight)
-- Soglie configurabili per "opportunità eccezionale"
-- Segnalazione value traps pericolosi
-- Salvataggio storico alert in JSON
-- Possibilità future di integrazione email/telegram
+- Interfaccia web moderna e responsive
+- Visualizzazione grafici interattivi (Plotly/D3.js)
+- Tabelle opportunità value con filtri
+- Metriche performance vs benchmark
+- Aggiornamento in tempo reale nuovi dati
+- Navigazione tra diverse sezioni analisi
+- Export dati direttamente da dashboard
 
 [CONSIDERAZIONI TECNICHE]
-- Utilizzare i punteggi investment_score già calcolati
-- Sfruttare metriche esistenti: sconto, qualità, rischio
-- Integrare con sistema reporting per highlight speciali
-- Mantenere backward compatibility
+- Utilizzare framework web leggero (Flask/FastAPI)
+- Integrare con sistema reporting esistente
+- Sfruttare asset statici già generati (HTML/PDF)
+- Mantenere architettura modulare
+- Possibilità future di autenticazione utenti
+- Compatibilità con sistema alert in sviluppo
