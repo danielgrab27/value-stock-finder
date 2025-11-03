@@ -12,6 +12,7 @@ Obiettivo: Creare dashboard web interattiva per visualizzazione risultati analis
 - Aggiornamento in tempo reale nuovi dati
 - Navigazione tra diverse sezioni analisi
 - Export dati direttamente da dashboard
+- **Integrazione con sistema alert esistente** ← NUOVO
 
 [CONSIDERAZIONI TECNICHE]
 - Utilizzare framework web leggero (Flask/FastAPI)
@@ -19,4 +20,5 @@ Obiettivo: Creare dashboard web interattiva per visualizzazione risultati analis
 - Sfruttare asset statici già generati (HTML/PDF)
 - Mantenere architettura modulare
 - Possibilità future di autenticazione utenti
-- Compatibilità con sistema alert in sviluppo
+- **Compatibilità con sistema alert già implementato** ← AGGIORNATO
+- **Utilizzare template engine per dinamicità** ← NUOVO
